@@ -14,6 +14,8 @@ namespace BiliBIliDemo
     {
         static void Main(string[] args)
         {
+
+
             uint roomId = 189205;
             BiliLiveListener listener = new BiliLiveListener(roomId, BiliLiveListener.Protocols.Tcp);
             listener.Connected += Connected;
@@ -59,6 +61,7 @@ namespace BiliBIliDemo
 
         private static void JsonsRecieved(JToken jsons)
         {
+
             Console.WriteLine("JsonsRecieved: " + jsons);
             Append("JsonsRecieved: " + jsons);
         }
