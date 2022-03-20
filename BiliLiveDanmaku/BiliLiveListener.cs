@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using BiliLive.Commands;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,11 +30,48 @@ namespace BiliLive
         public delegate void PopularityRecievedHandler(uint popularity);
         public event PopularityRecievedHandler PopularityRecieved;
 
-        public delegate void JsonsRecievedHandler(JToken jsons);
-        public event JsonsRecievedHandler JsonsRecieved;
+        public delegate void ComboSendHandler(ComboSend cmd);
+        public event ComboSendHandler OnComboSend;
 
-        public delegate void ItemsRecievedHandler(BiliLiveJsonParser.IItem item);
-        public event ItemsRecievedHandler ItemsRecieved;
+        public delegate void DanmakuHandler(Danmaku cmd);
+        public event DanmakuHandler OnDamaku;
+
+        public delegate void GiftHandler(Gift cmd);
+        public event GiftHandler OnGift;
+
+        public delegate void GuardBuyHandler(GuardBuy cmd);
+        public event GuardBuyHandler OnGuardBuy;
+
+        public delegate void InteractWordHandler(InteractWord cmd);
+        public event InteractWordHandler OnInteractWord;
+
+        public delegate void LiveHandler(Live cmd);
+        public event LiveHandler OnLive;
+
+        public delegate void PreparingHandler(Preparing cmd);
+        public event PreparingHandler OnPreparing;
+
+        public delegate void RawHandler(IData cmd);
+        public event RawHandler OnRaw;
+
+        public delegate void RoomBlockHandler(RoomBlock cmd);
+        public event RoomBlockHandler OnRoomBlock;
+
+        public delegate void SuperChatHandler(SuperChat cmd);
+        public event SuperChatHandler OnSuperChat;
+
+        public delegate void WatchedChangedHandler(WatchedChanged cmd);
+        public event WatchedChangedHandler OnWatchedChanged;
+
+        public delegate void WelcomeHandler(Welcome cmd);
+        public event WelcomeHandler OnWelcome;
+
+        public delegate void WelcomeGuardHandler(WelcomeGuard cmd);
+        public event WelcomeGuardHandler OnWelcomeGuard;
+
+        public delegate void UnknowGuardHandler(IData cmd);
+        public event UnknowGuardHandler OnUnknow;
+
 
         private TcpClient DanmakuTcpClient { get; set; }
         private ClientWebSocket DanmakuWebSocket { get; set; }
@@ -318,9 +356,7 @@ namespace BiliLive
                     {
                         BiliPackReader.IPack[] packs = PackReader.ReadPacksAsync();
 
-                        List<JToken> jsons = new List<JToken>();
-
-                        List<BiliLiveJsonParser.IItem> items = new List<BiliLiveJsonParser.IItem>();
+                        List<IData> items = new List<IData>();
 
                         foreach (BiliPackReader.IPack pack in packs)
                         {
@@ -331,8 +367,7 @@ namespace BiliLive
                                     break;
                                 case BiliPackReader.PackTypes.Command:
                                     JToken value = ((BiliPackReader.CommandPack)pack).Value;
-                                    jsons.Add(value);
-                                    BiliLiveJsonParser.IItem item = BiliLiveJsonParser.Parse(value);
+                                    IData item = BiliLiveJsonParser.Parse(value);
                                     if (item != null)
                                         items.Add(item);
                                     break;
@@ -341,14 +376,71 @@ namespace BiliLive
                                     break;
                             }
                         }
-                        foreach (var item in jsons)
-                        {
-                            JsonsRecieved?.Invoke(item);
-                        }
 
                         foreach (var item in items)
                         {
-                            ItemsRecieved?.Invoke(item);
+                            OnRaw?.Invoke(item);
+
+                            if (item is ICommand cmd)
+                            {
+                                switch (cmd.CommandType)
+                                {
+                                    case CommandType.COMBO_SEND:
+                                        OnComboSend?.Invoke(item as ComboSend);
+                                        break;
+
+                                    case CommandType.DANMU_MSG:
+                                        OnDamaku?.Invoke(item as Danmaku);
+                                        break;
+
+                                    case CommandType.SEND_GIFT:
+                                        OnGift?.Invoke(item as Gift);
+                                        break;
+
+                                    case CommandType.GUARD_BUY:
+                                        OnGuardBuy?.Invoke(item as GuardBuy);
+                                        break;
+
+                                    case CommandType.INTERACT_WORD:
+                                        OnInteractWord?.Invoke(item as InteractWord);
+                                        break;
+
+                                    case CommandType.LIVE:
+                                        OnLive?.Invoke(item as Live);
+                                        break;
+
+                                    case CommandType.PREPARING:
+                                        OnPreparing?.Invoke(item as Preparing);
+                                        break;
+
+                                    case CommandType.ROOM_BLOCK_MSG:
+                                        OnRoomBlock?.Invoke(item as RoomBlock);
+                                        break;
+
+                                    case CommandType.SUPER_CHAT_MESSAGE:
+                                        OnSuperChat?.Invoke(item as SuperChat);
+                                        break;
+
+                                    case CommandType.WATCHED_CHANGE:
+                                        OnWatchedChanged?.Invoke(item as WatchedChanged);
+                                        break;
+
+                                    case CommandType.WELCOME:
+                                        OnWelcome?.Invoke(item as Welcome);
+                                        break;
+
+                                    case CommandType.WELCOME_GUARD:
+                                        OnWelcomeGuard?.Invoke(item as WelcomeGuard);
+                                        break;
+
+                                    default:
+                                        OnUnknow?.Invoke(item as Unknow);
+                                        break;
+                                }
+                            }
+
+
+
                         }
                     }
                     catch (SocketException)
@@ -362,7 +454,10 @@ namespace BiliLive
                         Disconnect();
                     }
                 }
-            });
+            })
+            {
+
+            };
             EventListenerThread.Start();
         }
 

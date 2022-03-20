@@ -45,7 +45,14 @@ namespace BiliLive
             public CommandPack(byte[] payload)
             {
                 string jstr = Encoding.UTF8.GetString(payload, 0, payload.Length);
-                Value = JObject.Parse(jstr);
+                try
+                {
+                    Value = JObject.Parse(jstr);
+                }
+                catch
+                {
+                    Value = new JObject();
+                }
             }
         }
 
