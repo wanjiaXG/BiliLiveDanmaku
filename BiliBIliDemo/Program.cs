@@ -14,18 +14,16 @@ namespace BiliBIliDemo
     {
         static void Main(string[] args)
         {
-
-
             uint roomId = 189205;
-            BiliLiveListener listener = new BiliLiveListener(roomId, BiliLiveListener.Protocols.Tcp);
+            BiliLiveListener listener = new BiliLiveListener(roomId, Protocols.Tcp);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
             listener.Disconnected += Disconnected;
-            listener.ItemsRecieved += ItemsRecieved;
             listener.JsonsRecieved += JsonsRecieved;
             listener.PopularityRecieved += PopularityRecieved;
             listener.ServerHeartbeatRecieved += ServerHeartbeatRecieved;
             listener.Connect();
+
             while (true)
             {
                 string cmd = Console.ReadLine();
@@ -64,12 +62,6 @@ namespace BiliBIliDemo
 
             Console.WriteLine("JsonsRecieved: " + jsons);
             Append("JsonsRecieved: " + jsons);
-        }
-
-        private static void ItemsRecieved(IItem item)
-        {
-            Console.WriteLine("ItemsRecieved CMD: " + item.Cmd);
-            Append("ItemsRecieved CMD: " + item.Cmd);
         }
 
         private static void Disconnected()

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BiliLiveDanmaku.Properties {
+namespace BiliLive.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

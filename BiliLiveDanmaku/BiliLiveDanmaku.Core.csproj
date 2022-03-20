@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{48E84217-0D4B-42A4-82A7-6CD5FDC0E6C7}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>BiliLiveDanmaku</RootNamespace>
+    <RootNamespace>BiliLive</RootNamespace>
     <AssemblyName>BiliLiveDanmaku.Core</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -90,6 +90,8 @@
     <Compile Include="BiliLiveListener.cs" />
     <Compile Include="BiliPackReader.cs" />
     <Compile Include="BiliPackWriter.cs" />
+    <Compile Include="DanmakuServer.cs" />
+    <Compile Include="Protocols.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

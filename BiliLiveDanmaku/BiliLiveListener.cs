@@ -14,7 +14,6 @@ namespace BiliLive
 {
     public class BiliLiveListener
     {
-        public enum Protocols { Tcp, Ws, Wss };
         public Protocols Protocol { get; set; }
 
         public delegate void ConnectionEventHandler();
@@ -49,10 +48,6 @@ namespace BiliLive
         private Thread EventListenerThread { get; set; }
         private bool IsEventListenerRunning { get; set; }
 
-        public bool IsAutoReconnect { set; get; } = true;
-
-        public int ReconnectTimeout { set; get; } = 5000;
-
         /// <summary>
         /// Constructor 
         /// </summary>
@@ -64,30 +59,13 @@ namespace BiliLive
             RoomId = roomId;
             Protocol = protocol;
         }
-
+        
         #region Public methods
 
         public Task<bool> ConnectAsync() => new Task<bool>(Connect);
 
         public bool Connect()
         {
-            PingReply pingReply = null;
-            try
-            {
-                Console.WriteLine("正在测试网络状态...");
-                pingReply = new Ping().Send("live.bilibili.com");
-            }
-            catch (Exception)
-            {
-
-            }
-            if (pingReply == null || pingReply.Status != IPStatus.Success)
-            {
-                ConnectionFailed?.Invoke("网络连接失败");
-                Reconnect();
-                return false;
-            }
-
             DanmakuServer danmakuServer = GetDanmakuServer(RoomId);
             if (danmakuServer == null)
                 return false;
@@ -150,16 +128,6 @@ namespace BiliLive
 
         #region Connect to a DanmakuServer
 
-        private class DanmakuServer
-        {
-            public long RoomId;
-            public string Server;
-            public int Port;
-            public int WsPort;
-            public int WssPort;
-            public string Token;
-        }
-
         private TcpClient GetTcpConnection(DanmakuServer danmakuServer)
         {
             TcpClient tcpClient = new TcpClient();
@@ -202,19 +170,16 @@ namespace BiliLive
             catch (SocketException)
             {
                 ConnectionFailed?.Invoke("连接请求发送失败");
-                Reconnect();
                 return false;
             }
             catch (InvalidOperationException)
             {
                 ConnectionFailed?.Invoke("连接请求发送失败");
-                Reconnect();
                 return false;
             }
             catch (IOException)
             {
                 ConnectionFailed?.Invoke("连接请求发送失败");
-                Reconnect();
                 return false;
             }
         }
@@ -227,22 +192,22 @@ namespace BiliLive
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader streamReader = new StreamReader(response.GetResponseStream()))
+                string url = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId;
+                using (WebClient client = new WebClient())
                 {
-                    string result = streamReader.ReadToEnd();
-                    Match match = Regex.Match(result, "\"room_id\":(?<RoomId>[0-9]+)");
-                    if (match.Success)
-                        return uint.Parse(match.Groups["RoomId"].Value);
-                    return 0;
+                    string result = client.DownloadString(url);
+                    if(result != null)
+                    {
+                        Match match = Regex.Match(result, "\"room_id\":(?<RoomId>[0-9]+)");
+                        if (match.Success)
+                            return uint.Parse(match.Groups["RoomId"].Value);
+                    }
+                    throw new Exception();
                 }
-
             }
-            catch (WebException)
+            catch
             {
                 ConnectionFailed?.Invoke("未能找到直播间");
-                Reconnect();
                 return -1;
             }
 
@@ -259,12 +224,11 @@ namespace BiliLive
             {
                 using(WebClient client = new WebClient())
                 {
-                    string result = client.DownloadString("https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=" + roomId);
-                    JToken json = JObject.Parse(result);
-                    if (int.Parse(json["code"].ToString()) != 0)
+                    string url = "https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=" + roomId;
+                    string result = client.DownloadString(url);
+                    JObject json = JObject.Parse(result);
+                    if (json!=null && json.ContainsKey("code") && int.Parse(json["code"].ToString()) != 0)
                     {
-                        Console.Error.WriteLine("Error occurs when resolving dm servers");
-                        Console.Error.WriteLine(json.ToString());
                         return null;
                     }
 
@@ -280,13 +244,10 @@ namespace BiliLive
 
                     return danmakuServer;
                 }
-                
-
             }
             catch (WebException)
             {
                 ConnectionFailed?.Invoke("直播间信息获取失败");
-                Reconnect();
                 return null;
             }
 
@@ -319,41 +280,22 @@ namespace BiliLive
                     {
                         ConnectionFailed?.Invoke("心跳包发送失败");
                         Disconnect();
-                        Reconnect();
                     }
                     catch (InvalidOperationException)
                     {
                         ConnectionFailed?.Invoke("心跳包发送失败");
                         Disconnect();
-                        Reconnect();
                     }
                     catch (IOException)
                     {
                         ConnectionFailed?.Invoke("心跳包发送失败");
                         Disconnect();
-                        Reconnect();
                     }
                     Thread.Sleep(30 * 1000);
                 }
             });
             HeartbeatSenderThread.Start();
         }
-
-        private void Reconnect()
-        {
-            if (IsAutoReconnect)
-            {
-                Disconnect();
-                new Thread(delegate ()
-                {
-                    Console.WriteLine($"链接已断开, {ReconnectTimeout / 1000}s后重试...");
-                    Thread.Sleep(ReconnectTimeout);
-                    Connect();
-                })
-                { IsBackground = true }.Start();
-            }
-        }
-
         #endregion
 
         #region Event listener
@@ -413,13 +355,11 @@ namespace BiliLive
                     {
                         ConnectionFailed?.Invoke("数据读取失败");
                         Disconnect();
-                        Reconnect();
                     }
                     catch (IOException)
                     {
                         ConnectionFailed?.Invoke("数据读取失败");
                         Disconnect();
-                        Reconnect();
                     }
                 }
             });
