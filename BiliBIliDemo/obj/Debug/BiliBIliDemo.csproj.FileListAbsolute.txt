@@ -1,0 +1,13 @@
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\obj\Debug\BiliBIliDemo.csproj.AssemblyReference.cache
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\obj\Debug\BiliBIliDemo.csproj.CoreCompileInputs.cache
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\BiliBIliDemo.exe.config
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\BiliBIliDemo.exe
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\BiliBIliDemo.pdb
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\BiliLiveDanmaku.Core.dll
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\Newtonsoft.Json.dll
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\BiliLiveDanmaku.Core.pdb
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\BiliLiveDanmaku.Core.dll.config
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\bin\Debug\Newtonsoft.Json.xml
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\obj\Debug\BiliBIliDemo.csproj.CopyComplete
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\obj\Debug\BiliBIliDemo.exe
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliBIliDemo\obj\Debug\BiliBIliDemo.pdb

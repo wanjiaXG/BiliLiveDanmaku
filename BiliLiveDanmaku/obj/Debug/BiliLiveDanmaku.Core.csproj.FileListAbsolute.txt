@@ -1,0 +1,14 @@
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Properties.Resources.resources
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Core.csproj.GenerateResource.cache
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Core.csproj.CoreCompileInputs.cache
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Core.csproj.AssemblyReference.cache
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\BiliLiveDanmaku.Core.dll.config
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\BiliLiveDanmaku.Core.dll
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\BiliLiveDanmaku.Core.pdb
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Core.dll
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Core.pdb
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\Newtonsoft.Json.dll
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\Newtonsoft.Json.xml
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\obj\Debug\BiliLiveDanmaku.Core.csproj.CopyComplete
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\Meebey.SmartIrc4net.dll
+C:\Users\admin\Code\BiliLiveDanmaku\BiliLiveDanmaku\BiliLiveDanmaku\bin\Debug\Meebey.SmartIrc4net.xml
