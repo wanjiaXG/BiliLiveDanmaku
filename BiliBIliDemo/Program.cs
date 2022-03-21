@@ -1,28 +1,26 @@
 ﻿using BiliLive;
 using BiliLive.Commands;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using static BiliLive.BiliLiveJsonParser;
+using System.Threading;
 
 namespace BiliBIliDemo
 {
     class Program
     {
+        static BiliLiveListener listener;
         static void Main(string[] args)
         {
-            uint roomId = 88618;// 24042175;// 14447107;// 189205;
-            BiliLiveListener listener = new BiliLiveListener(roomId, Protocols.Tcp);
+            uint roomId = 5520;// 21747433;// 88618;// 24042175;// 14447107;// 189205;
+            listener = new BiliLiveListener(roomId);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
             listener.Disconnected += Disconnected;
             listener.PopularityRecieved += PopularityRecieved;
             listener.ServerHeartbeatRecieved += ServerHeartbeatRecieved;
-            //listener.OnRaw += OnRaw;
+            listener.OnRaw += OnRaw;
             listener.OnComboSend += OnComboSend;
             listener.OnDamaku += OnDamaku;
             listener.OnGift += OnGift;
@@ -36,10 +34,11 @@ namespace BiliBIliDemo
             listener.OnWatchedChanged += OnWatchedChanged;
             listener.OnWelcome += OnWelcome;
             listener.OnWelcomeGuard += OnWelcomeGuard;
-
-
             listener.Connect();
 
+
+
+            //23801978
             while (true)
             {
                 string cmd = Console.ReadLine();
@@ -215,7 +214,7 @@ namespace BiliBIliDemo
         {
             string msg = $"OnRaw:\r\n" +
                 $"Data: {data.RawData}\r\n";
-            Console.WriteLine(msg);
+            //Console.WriteLine(msg);
             Append(msg);
         }
 
@@ -249,6 +248,35 @@ namespace BiliBIliDemo
             string msg = $"Disconnected\r\n";
             Console.WriteLine(msg);
             Append(msg);
+            ReConnect();
+
+
+
+        }
+
+
+        private static void ReConnect()
+        {
+            new Thread(() =>
+            {
+                Thread.Sleep(10 * 1000);
+                lock (listener)
+                {
+                    if (!listener.IsRunning)
+                    {
+                        string msg = "正在重连...";
+                        Console.WriteLine(msg);
+                        listener?.Connect();
+                        Append(msg);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Listenner正在运行，无需重连");
+                    }
+                }
+            })
+            { IsBackground = true }.Start();
+            
         }
 
         private static void ConnectionFailed(string message)
@@ -256,6 +284,7 @@ namespace BiliBIliDemo
             string msg = $"ConnectionFailed\r\n";
             Console.WriteLine(msg);
             Append(msg);
+            ReConnect();
         }
 
         private static void Connected()

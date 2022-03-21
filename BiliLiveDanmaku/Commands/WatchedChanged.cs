@@ -16,15 +16,6 @@ namespace BiliLive.Commands
             RawData = json.ToString(Newtonsoft.Json.Formatting.None);
             Count = uint.Parse(json["data"]["num"].ToString());
         }
-
-
-        /*        {
-          "cmd": "WATCHED_CHANGE",
-          "data": {
-            "num": 6,
-            "text_small": "6",
-            "text_large": "6人看过"
-          }*/
     }
 
 

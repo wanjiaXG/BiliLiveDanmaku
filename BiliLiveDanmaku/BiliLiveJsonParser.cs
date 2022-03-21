@@ -1,8 +1,5 @@
 ﻿using BiliLive.Commands;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 namespace BiliLive
 {

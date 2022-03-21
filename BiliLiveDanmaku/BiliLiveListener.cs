@@ -84,16 +84,17 @@ namespace BiliLive
         private bool IsHeartbeatSenderRunning { get; set; }
 
         private Thread EventListenerThread { get; set; }
-        private bool IsEventListenerRunning { get; set; }
+        public bool IsRunning { get; private set; }
 
         /// <summary>
         /// Constructor 
         /// </summary>
         /// <param name="roomId"></param>
-        public BiliLiveListener(uint roomId, Protocols protocol)
+
+        public BiliLiveListener(uint roomId, Protocols protocol = Protocols.Tcp)
         {
             IsHeartbeatSenderRunning = false;
-            IsEventListenerRunning = false;
+            IsRunning = false;
             RoomId = roomId;
             Protocol = protocol;
         }
@@ -104,45 +105,52 @@ namespace BiliLive
 
         public bool Connect()
         {
-            DanmakuServer danmakuServer = GetDanmakuServer(RoomId);
-            if (danmakuServer == null)
-                return false;
-
-            switch (Protocol)
+            try
             {
-                case Protocols.Tcp:
-                    DanmakuTcpClient = GetTcpConnection(danmakuServer);
-                    Stream stream = DanmakuTcpClient.GetStream();
+                DanmakuServer danmakuServer = GetDanmakuServer(RoomId);
+                if (danmakuServer == null)
+                    return false;
 
-                    stream.ReadTimeout = 30 * 1000 + 1000;
-                    stream.WriteTimeout = 30 * 1000 + 1000;
+                switch (Protocol)
+                {
+                    case Protocols.Tcp:
+                        DanmakuTcpClient = GetTcpConnection(danmakuServer);
+                        Stream stream = DanmakuTcpClient.GetStream();
 
-                    PackReader = new BiliPackReader(stream);
-                    PackWriter = new BiliPackWriter(stream);
-                    break;
-                case Protocols.Ws:
-                    DanmakuWebSocket = GetWsConnection(danmakuServer);
-                    PackReader = new BiliPackReader(DanmakuWebSocket);
-                    PackWriter = new BiliPackWriter(DanmakuWebSocket);
-                    break;
-                case Protocols.Wss:
-                    DanmakuWebSocket = GetWssConnection(danmakuServer);
-                    PackReader = new BiliPackReader(DanmakuWebSocket);
-                    PackWriter = new BiliPackWriter(DanmakuWebSocket);
-                    break;
+                        stream.ReadTimeout = 30 * 1000 + 1000;
+                        stream.WriteTimeout = 30 * 1000 + 1000;
+
+                        PackReader = new BiliPackReader(stream);
+                        PackWriter = new BiliPackWriter(stream);
+                        break;
+                    case Protocols.Ws:
+                        DanmakuWebSocket = GetWsConnection(danmakuServer);
+                        PackReader = new BiliPackReader(DanmakuWebSocket);
+                        PackWriter = new BiliPackWriter(DanmakuWebSocket);
+                        break;
+                    case Protocols.Wss:
+                        DanmakuWebSocket = GetWssConnection(danmakuServer);
+                        PackReader = new BiliPackReader(DanmakuWebSocket);
+                        PackWriter = new BiliPackWriter(DanmakuWebSocket);
+                        break;
+                }
+
+                if (!InitConnection(danmakuServer))
+                {
+                    Disconnect();
+                    return false;
+                }
+
+                StartEventListener();
+                StartHeartbeatSender();
+
+                Connected?.Invoke();
+                return true;
             }
-
-            if (!InitConnection(danmakuServer))
+            catch
             {
-                Disconnect();
                 return false;
             }
-
-            StartEventListener();
-            StartHeartbeatSender();
-
-            Connected?.Invoke();
-            return true;
         }
 
         public Task DisconnectAsync() => new Task(Disconnect);
@@ -152,12 +160,13 @@ namespace BiliLive
             StopEventListener();
             StopHeartbeatSender();
             if (DanmakuTcpClient != null)
-                DanmakuTcpClient.Close();
+                try { DanmakuTcpClient.Close(); } catch { }
             if (DanmakuWebSocket != null)
             {
-                DanmakuWebSocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty, CancellationToken.None);
-                DanmakuWebSocket.Abort();
-                DanmakuWebSocket.Dispose();
+                try { DanmakuWebSocket.Abort(); } catch { }
+
+                try { DanmakuWebSocket.Dispose(); } catch { }
+                  
             }
             Disconnected?.Invoke();
         }
@@ -298,8 +307,8 @@ namespace BiliLive
         private void StopHeartbeatSender()
         {
             IsHeartbeatSenderRunning = false;
-            if (HeartbeatSenderThread != null)
-                HeartbeatSenderThread.Abort();
+            if (HeartbeatSenderThread != null && HeartbeatSenderThread.IsAlive)
+                try { HeartbeatSenderThread.Abort(); } catch { }
         }
 
         private void StartHeartbeatSender()
@@ -340,17 +349,19 @@ namespace BiliLive
 
         private void StopEventListener()
         {
-            IsEventListenerRunning = false;
-            if (EventListenerThread != null)
-                EventListenerThread.Abort();
+            IsRunning = false;
+            if (EventListenerThread != null && EventListenerThread.IsAlive)
+            {
+                try { EventListenerThread.Abort(); } catch { }
+            }
         }
 
         private void StartEventListener()
         {
             EventListenerThread = new Thread(delegate ()
             {
-                IsEventListenerRunning = true;
-                while (IsEventListenerRunning)
+                IsRunning = true;
+                while (IsRunning)
                 {
                     try
                     {

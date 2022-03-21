@@ -7,7 +7,7 @@ namespace BiliLive.Commands
     {
         public uint RoomId { get; private set; }
 
-        public CommandType CommandType => CommandType.WATCHED_CHANGE;
+        public CommandType CommandType => CommandType.PREPARING;
 
         public string RawData { get; private set; }
         
