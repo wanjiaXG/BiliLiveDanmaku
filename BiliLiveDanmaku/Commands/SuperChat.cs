@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 namespace BiliLive.Commands
 {
     [Serializable]
-    public class SuperChat : ITimeStampedCommand
+    public class SuperChat : Command
     {
-        public CommandType CommandType => CommandType.SUPER_CHAT_MESSAGE;
+        public override CommandType CommandType => CommandType.SUPER_CHAT_MESSAGE;
 
         public DateTime TimeStamp { get; private set; }
 
@@ -19,31 +19,23 @@ namespace BiliLive.Commands
         public string Message { get; private set; }
         public bool TransMark { get; private set; }
         public string MessageTrans { get; private set; }
-        public User User { get; private set; }
+        public uint UID { get; }
+        public string Username { get; }
         public string Face { get; private set; }
         public TimeSpan Duration { get; private set; }
 
-        public string RawData { get; private set; }
-        
-        public SuperChat(JToken json)
+        public SuperChat(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            TimeStamp = new DateTime(1970, 01, 01).AddMilliseconds(double.Parse(json["data"]["ts"].ToString()));
+            TimeStamp = GetTimeStamp(GetValue<double>("data", "ts"));
 
-            Price = uint.Parse(json["data"]["price"].ToString());
-            try
-            {
-                Message = Regex.Unescape(json["data"]["message"].ToString());
-            }
-            catch (Exception)
-            {
-                Message = json["data"]["message"].ToString();
-            }
-            TransMark = int.Parse(json["data"]["trans_mark"].ToString()) != 0;
-            MessageTrans = json["data"]["message_trans"].ToString();
-            User = new User(uint.Parse(json["data"]["uid"].ToString()), Regex.Unescape(json["data"]["user_info"]["uname"].ToString()));
-            Face = json["data"]["user_info"]["face"].ToString();
-            Duration = TimeSpan.FromSeconds(double.Parse(json["data"]["time"].ToString()));
+            Price = GetValue<uint>("data", "price");
+            Message = GetValue<string>("data", "message");
+            TransMark = GetValue<int>("data", "trans_mark") != 0;
+            MessageTrans = GetValue<string>("data", "message_trans");
+            UID = GetValue<uint>("data", "uid");
+            Username = GetValue<string>("data", "uname");
+            Face = GetValue<string>("data", "user_info", "face");
+            Duration = TimeSpan.FromSeconds(GetValue<double>("data", "time"));
         }
     }
 }

@@ -3,18 +3,15 @@ using System.Text.RegularExpressions;
 
 namespace BiliLive.Commands
 {
-    public class WatchedChanged : ICommand
+    public class WatchedChanged : Command
     {
-        public CommandType CommandType => CommandType.WATCHED_CHANGE;
+        public override CommandType CommandType => CommandType.WATCHED_CHANGE;
 
         public uint Count { get; private set; }
-
-        public string RawData { get; private set; }
         
-        public WatchedChanged(JToken json)
+        public WatchedChanged(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            Count = uint.Parse(json["data"]["num"].ToString());
+            Count = GetValue<uint>("data", "num");
         }
     }
 

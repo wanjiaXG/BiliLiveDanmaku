@@ -9,22 +9,21 @@ using System.Threading.Tasks;
 namespace BiliLive.Commands
 {
     [Serializable]
-    public class WelcomeGuard : ITimeStampedCommand
+    public class WelcomeGuard : Command
     {
-        public CommandType CommandType => CommandType.WELCOME_GUARD;
+        public override CommandType CommandType => CommandType.WELCOME_GUARD;
 
         public DateTime TimeStamp { get; private set; }
 
-        public User User { get; private set; }
+        public uint UID { get; }
+        public string Username { get; }
         public uint GuardLevel { get; private set; }
-
-        public string RawData { get; private set; }
         
-        public WelcomeGuard(JToken json)
+        public WelcomeGuard(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            User = new User(uint.Parse(json["data"]["uid"].ToString()), Regex.Unescape(json["data"]["username"].ToString()));
-            GuardLevel = uint.Parse(json["data"]["guard_level"].ToString());
+            UID = GetValue<uint>("data", "uid");
+            Username = GetValue<string>("data", "uname");
+            GuardLevel = GetValue<uint>("data", "guard_level");
         }
     }
 }

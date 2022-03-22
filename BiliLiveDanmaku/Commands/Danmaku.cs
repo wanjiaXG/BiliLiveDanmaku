@@ -8,35 +8,26 @@ using System.Threading.Tasks;
 
 namespace BiliLive.Commands
 {
-    [Serializable]
-    public class Danmaku : ITimeStampedCommand
+    public class Danmaku : Command
     {
-        public CommandType CommandType => CommandType.DANMU_MSG;
+        public override CommandType CommandType => CommandType.DANMU_MSG;
 
         public DateTime TimeStamp { get; private set; }
 
-        public User User { get; private set; }
+        public uint UID { get; }
+        public string Username { get; }
+
         public string Message { get; private set; }
+
         public uint Type { get; private set; }
 
-        public string RawData { get; private set; }
-
-        public Danmaku(JToken json)
+        public Danmaku(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            User = new User((uint)json["info"][2][0], Regex.Unescape(json["info"][2][1].ToString()));
-            try
-            {
-                Message = Regex.Unescape(json["info"][1].ToString());
-            }
-            catch (Exception)
-            {
-                Message = json["info"][1].ToString();
-            }
-
-            Type = (uint)json["info"][0][9];
-
-            TimeStamp = new DateTime(1970, 01, 01).AddMilliseconds(double.Parse(json["info"][0][4].ToString()));
+            UID = GetValue<uint>("data", "uid");
+            Username = GetValue<string>("data", "uname");
+            Message = GetValue<string>("info", 1);
+            Type = GetValue<uint>("info", 0, 9);
+            TimeStamp = GetTimeStamp(GetValue<double>("info", 0, 4));
         }
     }
 }

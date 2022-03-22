@@ -13,7 +13,7 @@ namespace BiliBIliDemo
         static BiliLiveListener listener;
         static void Main(string[] args)
         {
-            uint roomId = 5520;// 21747433;// 88618;// 24042175;// 14447107;// 189205;
+            uint roomId = 23230185;// 189205;
             listener = new BiliLiveListener(roomId);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
@@ -52,8 +52,8 @@ namespace BiliBIliDemo
         private static void OnWelcomeGuard(WelcomeGuard cmd)
         {
             string msg = $"OnWelcomeGuard:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"GuardLevel: {cmd.GuardLevel}\r\n" +
                 $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
@@ -63,8 +63,8 @@ namespace BiliBIliDemo
         private static void OnWelcome(Welcome cmd)
         {
             string msg = $"OnWelcome:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"IsSVIP: {cmd.Svip}\r\n";
             Console.WriteLine(msg);
             Append(msg);
@@ -78,7 +78,7 @@ namespace BiliBIliDemo
             Append(msg);
         }
 
-        private static void OnUnknow(IData data)
+        private static void OnUnknow(Command data)
         {
             string msg = $"OnUnknow:\r\n" +
                 $"Data: {data.RawData}\r\n";
@@ -89,8 +89,8 @@ namespace BiliBIliDemo
         private static void OnSuperChat(SuperChat cmd)
         {
             string msg = $"OnSuperChat:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"Face: {cmd.Face}\r\n" +
                 $"TransMark: {cmd.TransMark}\r\n" +
                 $"Message: {cmd.Message}\r\n" +
@@ -105,8 +105,8 @@ namespace BiliBIliDemo
         private static void OnRoomBlock(RoomBlock cmd)
         {
             string msg = $"OnRoomBlock:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"Operator: {cmd.Operator}\r\n";
             Console.WriteLine(msg);
             Append(msg);
@@ -137,8 +137,8 @@ namespace BiliBIliDemo
         private static void OnInteractWord(InteractWord cmd)
         {
             string msg = $"OnInteractWord:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"Identity: {GetIndentity(cmd.Identity)}\r\n" +
                 $"MessageType: {cmd.MessageType}\r\n" +
                 $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
@@ -160,8 +160,8 @@ namespace BiliBIliDemo
         private static void OnGuardBuy(GuardBuy cmd)
         {
             string msg = $"OnGuardBuy:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"GiftName: {cmd.GiftName}\r\n" +
                 $"GuardLevel: {cmd.GuardLevel}\r\n" +
                 $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
@@ -172,8 +172,8 @@ namespace BiliBIliDemo
         private static void OnGift(Gift cmd)
         {
             string msg = $"OnGift:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"GiftId: {cmd.GiftId}\r\n" +
                 $"GiftName: {cmd.GiftName}\r\n" +
                 $"Number: {cmd.Number}\r\n" +
@@ -188,8 +188,8 @@ namespace BiliBIliDemo
         private static void OnDamaku(Danmaku cmd)
         {
             string msg = $"OnDamaku:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"Message: {cmd.Message}\r\n" +
                 $"Type: {cmd.Type}\r\n" +
                 $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
@@ -200,17 +200,17 @@ namespace BiliBIliDemo
         private static void OnComboSend(ComboSend cmd)
         {
             string msg = $"OnComboSend:\r\n" +
-                $"UID: {cmd.User.Id}\r\n" +
-                $"Name: {cmd.User.Name}\r\n" +
+                $"UID: {cmd.UID}\r\n" +
+                $"Name: {cmd.Username}\r\n" +
                 $"Action: {cmd.Action}\r\n" +
                 $"GiftId: {cmd.GiftId}\r\n" +
                 $"GiftName: {cmd.GiftName}\r\n" +
-                $"Number: {cmd.Number}\r\n";
+                $"Number: {cmd.TotalNumber}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
 
-        private static void OnRaw(IData data)
+        private static void OnRaw(Command data)
         {
             string msg = $"OnRaw:\r\n" +
                 $"Data: {data.RawData}\r\n";

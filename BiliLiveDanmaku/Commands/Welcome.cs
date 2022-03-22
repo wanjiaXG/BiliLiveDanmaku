@@ -9,20 +9,19 @@ using System.Threading.Tasks;
 namespace BiliLive.Commands
 {
     [Serializable]
-    public class Welcome : ICommand
+    public class Welcome : Command
     {
-        public CommandType CommandType => CommandType.WELCOME;
+        public override CommandType CommandType => CommandType.WELCOME;
 
-        public string RawData { get; private set; }
-        
-        public User User { get; private set; }
+        public uint UID { get; }
+        public string Username { get; }
         public bool Svip { get; private set; }
 
-        public Welcome(JToken json)
+        public Welcome(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            User = new User(uint.Parse(json["data"]["uid"].ToString()), Regex.Unescape(json["data"]["uname"].ToString()));
-            Svip = int.Parse(json["data"]["svip"].ToString()) != 0;
+            UID = GetValue<uint>("data", "uid");
+            Username = GetValue<string>("data", "uname");
+            Svip = GetValue<int>("data", "svip") != 0;
         }
     }
 }

@@ -3,19 +3,15 @@
 namespace BiliLive.Commands
 {
 
-    public class Preparing : ICommand
+    public class Preparing : Command
     {
         public uint RoomId { get; private set; }
 
-        public CommandType CommandType => CommandType.PREPARING;
+        public override CommandType CommandType => CommandType.PREPARING;
 
-        public string RawData { get; private set; }
-        
-
-        public Preparing(JToken json)
+        public Preparing(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            RoomId = uint.Parse(json["roomid"].ToString());
+            RoomId = GetValue<uint>("roomid");
         }
     }
 }

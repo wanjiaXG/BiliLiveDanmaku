@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BiliLive.Commands
 {
-    public class Live : ITimeStampedCommand
+    public class Live : Command
     {
         /*        [2022-03-20 14:49:03]: JsonsRecieved: {
           "cmd": "LIVE",
@@ -28,21 +28,17 @@ namespace BiliLive.Commands
         public int LiveModel { get; private set; }
         public uint RoomId { get; private set; }
 
-        public CommandType CommandType => CommandType.LIVE;
-
-        public string RawData { get; private set; }
+        public override CommandType CommandType => CommandType.LIVE;
         
-        public Live(JToken json)
+        public Live(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            LiveKey = json["live_key"].ToString();
-            VoiceBackground = json["voice_background"].ToString();
-            SubSessionKey = json["sub_session_key"].ToString();
-            LivePlatform = json["live_platform"].ToString();
-            LiveModel = int.Parse(json["live_model"].ToString());
-            RoomId = uint.Parse(json["roomid"].ToString());
-
-            TimeStamp = new DateTime(1970, 01, 01).AddSeconds(double.Parse(json["live_time"].ToString()));
+            LiveKey = GetValue<string>("live_key");
+            VoiceBackground = GetValue<string>("voice_background");
+            SubSessionKey = GetValue<string>("sub_session_key");
+            LivePlatform = GetValue<string>("live_platform");
+            LiveModel = GetValue<int>("live_model");
+            RoomId = GetValue<uint>("roomid");
+            TimeStamp = GetTimeStamp(GetValue<double>("live_time"));
         }
     }
 }

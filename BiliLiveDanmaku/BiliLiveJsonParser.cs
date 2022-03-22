@@ -5,7 +5,7 @@ namespace BiliLive
 {
     public class BiliLiveJsonParser
     {
-        public static IData Parse(JToken json)
+        public static Command Parse(JToken json)
         {
             string[] cmd = (json["cmd"].ToString()).Split(':');
             switch (cmd[0])
@@ -46,7 +46,7 @@ namespace BiliLive
                 case "SYS_GIFT":
                 case "ROOM_REAL_TIME_MESSAGE_UPDATE":
                 default:
-                    return new Unknow(json);
+                    return new Command(json);
             }
         }
     }

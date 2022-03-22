@@ -51,7 +51,7 @@ namespace BiliLive
         public delegate void PreparingHandler(Preparing cmd);
         public event PreparingHandler OnPreparing;
 
-        public delegate void RawHandler(IData cmd);
+        public delegate void RawHandler(Command cmd);
         public event RawHandler OnRaw;
 
         public delegate void RoomBlockHandler(RoomBlock cmd);
@@ -69,7 +69,7 @@ namespace BiliLive
         public delegate void WelcomeGuardHandler(WelcomeGuard cmd);
         public event WelcomeGuardHandler OnWelcomeGuard;
 
-        public delegate void UnknowGuardHandler(IData cmd);
+        public delegate void UnknowGuardHandler(Command cmd);
         public event UnknowGuardHandler OnUnknow;
 
 
@@ -367,7 +367,7 @@ namespace BiliLive
                     {
                         BiliPackReader.IPack[] packs = PackReader.ReadPacksAsync();
 
-                        List<IData> items = new List<IData>();
+                        List<Command> items = new List<Command>();
 
                         foreach (BiliPackReader.IPack pack in packs)
                         {
@@ -378,7 +378,7 @@ namespace BiliLive
                                     break;
                                 case BiliPackReader.PackTypes.Command:
                                     JToken value = ((BiliPackReader.CommandPack)pack).Value;
-                                    IData item = BiliLiveJsonParser.Parse(value);
+                                    Command item = BiliLiveJsonParser.Parse(value);
                                     if (item != null)
                                         items.Add(item);
                                     break;
@@ -392,7 +392,7 @@ namespace BiliLive
                         {
                             OnRaw?.Invoke(item);
 
-                            if (item is ICommand cmd)
+                            if (item is Command cmd)
                             {
                                 switch (cmd.CommandType)
                                 {
@@ -445,7 +445,7 @@ namespace BiliLive
                                         break;
 
                                     default:
-                                        OnUnknow?.Invoke(item as Unknow);
+                                        OnUnknow?.Invoke(item);
                                         break;
                                 }
                             }

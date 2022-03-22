@@ -8,27 +8,25 @@ using System.Threading.Tasks;
 
 namespace BiliLive.Commands
 {
-    [Serializable]
-    public class ComboSend : ICommand
+    public class ComboSend : Command
     {
-        public User User { get; private set; }
+        public uint UID { get; }
+        public string Username { get; }
         public string GiftName { get; private set; }
-        public uint Number { get; private set; }
+        public uint TotalNumber { get; private set; }
         public uint GiftId { get; private set; }
         public string Action { get; private set; }
 
-        public string RawData { get; private set; }
+        public override CommandType CommandType => CommandType.COMBO_SEND;
 
-        public CommandType CommandType => CommandType.COMBO_SEND;
-
-        public ComboSend(JToken json)
+        public ComboSend(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            User = new User(uint.Parse(json["data"]["uid"].ToString()), Regex.Unescape(json["data"]["uname"].ToString()));
-            GiftName = Regex.Unescape(json["data"]["gift_name"].ToString());
-            Number = uint.Parse(json["data"]["total_num"].ToString());
-            GiftId = uint.Parse(json["data"]["gift_id"].ToString());
-            Action = json["data"]["action"].ToString();
+            UID = GetValue<uint>("data", "uid");
+            Username = GetValue<string>("data", "uname");
+            GiftName = GetValue<string>("data", "gift_name");
+            TotalNumber = GetValue<uint>("data", "total_num");
+            GiftId = GetValue<uint>("data", "gift_id");
+            Action = GetValue<string>("data", "action");
         }
     }
 }

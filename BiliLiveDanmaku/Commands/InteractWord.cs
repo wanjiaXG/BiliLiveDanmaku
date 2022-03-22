@@ -1,15 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace BiliLive.Commands
 {
-    [Serializable]
-    public class InteractWord : ITimeStampedCommand
+    public class InteractWord : Command
     {
         public enum Identities
         {
@@ -34,80 +29,27 @@ namespace BiliLive.Commands
             MutualAttention
         }
 
-        public CommandType CommandType => CommandType.INTERACT_WORD;
+        public override CommandType CommandType => CommandType.INTERACT_WORD;
+
         public DateTime TimeStamp { get; private set; }
 
-        public User User { get; private set; }
+        public uint UID { get; }
+        public string Username { get; }
         public ICollection<Identities> Identity { get; private set; }
         public MessageTypes MessageType { get; private set; }
 
-        public string RawData { get; private set; }
-
-        public InteractWord(JToken json)
+        public InteractWord(JToken json) : base(json)
         {
-            RawData = json.ToString(Newtonsoft.Json.Formatting.None);
-            User = new User(uint.Parse(json["data"]["uid"].ToString()), Regex.Unescape(json["data"]["uname"].ToString()));
-
+            UID = GetValue<uint>("data", "uid");
+            Username = GetValue<string>("data", "uname");
             List<Identities> identities = new List<Identities>();
-            foreach (JToken i in json["data"]["identities"])
+            foreach (JToken item in GetValue<JToken>("data", "identities"))
             {
-                switch (int.Parse(i.ToString()))
-                {
-                    case 1:
-                        identities.Add(Identities.Normal);
-                        break;
-                    case 2:
-                        identities.Add(Identities.Manager);
-                        break;
-                    case 3:
-                        identities.Add(Identities.Fans);
-                        break;
-                    case 4:
-                        identities.Add(Identities.Vip);
-                        break;
-                    case 5:
-                        identities.Add(Identities.SVip);
-                        break;
-                    case 6:
-                        identities.Add(Identities.GuardJian);
-                        break;
-                    case 7:
-                        identities.Add(Identities.GuardTi);
-                        break;
-                    case 8:
-                        identities.Add(Identities.GuardZong);
-                        break;
-                    default:
-                        identities.Add(Identities.Unknown);
-                        break;
-                }
+                identities.Add(GetValue<Identities>(item));
             }
             Identity = identities.ToArray();
-
-            int msgTypeId = int.Parse(json["data"]["msg_type"].ToString());
-            switch (msgTypeId)
-            {
-                case 1:
-                    MessageType = MessageTypes.Entry;
-                    break;
-                case 2:
-                    MessageType = MessageTypes.Attention;
-                    break;
-                case 3:
-                    MessageType = MessageTypes.Share;
-                    break;
-                case 4:
-                    MessageType = MessageTypes.SpecialAttention;
-                    break;
-                case 5:
-                    MessageType = MessageTypes.MutualAttention;
-                    break;
-                default:
-                    MessageType = MessageTypes.Unknown;
-                    break;
-            }
-
-            TimeStamp = new DateTime(1970, 01, 01).AddSeconds(double.Parse(json["data"]["timestamp"].ToString()));
+            MessageType = GetValue<MessageTypes>("data", "msg_type");
+            TimeStamp = GetTimeStamp(GetValue<double>("data", "timestamp"));
         }
     }
 }
