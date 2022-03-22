@@ -31,7 +31,7 @@ namespace BiliLive.Commands
 
         public override CommandType CommandType => CommandType.INTERACT_WORD;
 
-        public DateTime TimeStamp { get; private set; }
+        //public DateTime TimeStamp { get; private set; }
 
         public uint UID { get; }
         public string Username { get; }
@@ -43,13 +43,17 @@ namespace BiliLive.Commands
             UID = GetValue<uint>("data", "uid");
             Username = GetValue<string>("data", "uname");
             List<Identities> identities = new List<Identities>();
-            foreach (JToken item in GetValue<JToken>("data", "identities"))
+            JToken list = GetValue<JToken>("data", "identities");
+            if(list != null)
             {
-                identities.Add(GetValue<Identities>(item));
+                foreach (JToken item in list)
+                {
+                    identities.Add(GetJTokenValue<Identities>(item));
+                }
             }
             Identity = identities.ToArray();
             MessageType = GetValue<MessageTypes>("data", "msg_type");
-            TimeStamp = GetTimeStamp(GetValue<double>("data", "timestamp"));
+            //TimeStamp = GetTimeStamp(GetValue<long>("data", "timestamp"));
         }
     }
 }

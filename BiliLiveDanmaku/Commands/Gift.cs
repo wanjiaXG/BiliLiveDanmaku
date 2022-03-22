@@ -5,9 +5,9 @@ namespace BiliLive.Commands
 {
     public class Gift : Command
     {
-        public override CommandType CommandType => CommandType.DANMU_MSG;
+        public override CommandType CommandType => CommandType.SEND_GIFT;
 
-        public DateTime TimeStamp { get; private set; }
+        //public DateTime TimeStamp { get; private set; }
 
         public uint UID { get; }
         public string Username { get; }
@@ -28,7 +28,7 @@ namespace BiliLive.Commands
             GiftId = GetValue<uint>("data", "giftId"); 
             Action = GetValue<string>("data", "action"); 
             CoinType = GetValue<string>("data", "coin_type");
-            TimeStamp = GetTimeStamp(GetValue<double>("data", "timestamp"));
+            //TimeStamp = GetTimeStamp(GetValue<double>("data", "timestamp"));
         }
     }
 }

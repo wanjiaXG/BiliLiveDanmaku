@@ -11,7 +11,7 @@ namespace BiliLive.Commands
     public class GuardBuy : Command
     {
         public override CommandType CommandType => CommandType.GUARD_BUY;
-        public DateTime TimeStamp { get; private set; }
+        //public DateTime TimeStamp { get; private set; }
 
         public uint UID { get; }
         public string Username { get; }
@@ -24,7 +24,7 @@ namespace BiliLive.Commands
             Username = GetValue<string>("data", "uname");
             GuardLevel = GetValue<uint>("data", "guard_level");
             GiftName = GetValue<string>("data", "gift_name");
-            TimeStamp = GetTimeStamp(GetValue<double>("data", "start_time"));
+            //TimeStamp = GetTimeStamp(GetValue<long>("data", "start_time"));
         }
     }
 }

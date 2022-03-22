@@ -23,10 +23,10 @@ namespace BiliLive.Commands
         }
         protected T GetValue<T>(params object[] keys)
         {
-            return GetValue<T>(Json, keys);
+            return GetJTokenValue<T>(Json, keys);
         }
 
-        protected T GetValue<T>(JToken json, params object[] keys)
+        protected T GetJTokenValue<T>(JToken json, params object[] keys)
         {
             if (json == null)
             {
@@ -37,8 +37,9 @@ namespace BiliLive.Commands
             JToken current = json;
             foreach (var key in keys)
             {
-                if (current is JArray arr)
+                if (current.Type == JTokenType.Array)
                 {
+                    JArray arr = current as JArray;
                     if (key != null &&
                         int.TryParse(key.ToString(), out int index) &&
                         arr.Count > index)
@@ -52,8 +53,9 @@ namespace BiliLive.Commands
                         break;
                     }
                 }
-                else if (current is JObject obj)
+                else if (current.Type == JTokenType.Object)
                 {
+                    JObject obj = current as JObject;
                     if (key != null &&
                         obj.ContainsKey(key.ToString()))
                     {
@@ -65,6 +67,12 @@ namespace BiliLive.Commands
                         isOK = false;
                         break;
                     }
+                }
+                else 
+                {
+                    //出错了
+                    isOK = false;
+                    break;
                 }
             }
 
@@ -80,7 +88,16 @@ namespace BiliLive.Commands
                 }
                 catch
                 {
-                    //出错了
+                    //尝试方法二
+                    object obj = current;
+                    try
+                    {
+                        return (T)obj;
+                    }
+                    catch
+                    {
+                        //出错了
+                    }
                 }
             }
 
@@ -89,11 +106,12 @@ namespace BiliLive.Commands
         }
 
 
-        protected DateTime GetTimeStamp(double time)
+/*        protected DateTime GetTimeStamp(long time)
         {
+
             return new DateTime(1970, 01, 01).AddMilliseconds(time);
         }
-
+    */
     }
 
 }

@@ -20,7 +20,7 @@ namespace BiliLive.Commands
           "roomid": 189205
         }*/
 
-        public DateTime TimeStamp { get; private set; }
+        //public DateTime TimeStamp { get; private set; }
         public string LiveKey { get; private set; }
         public string VoiceBackground { get; private set; }
         public string SubSessionKey { get; private set; }
@@ -38,7 +38,7 @@ namespace BiliLive.Commands
             LivePlatform = GetValue<string>("live_platform");
             LiveModel = GetValue<int>("live_model");
             RoomId = GetValue<uint>("roomid");
-            TimeStamp = GetTimeStamp(GetValue<double>("live_time"));
+            //TimeStamp = GetTimeStamp(GetValue<long>("live_time"));
         }
     }
 }

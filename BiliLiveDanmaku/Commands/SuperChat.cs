@@ -13,7 +13,7 @@ namespace BiliLive.Commands
     {
         public override CommandType CommandType => CommandType.SUPER_CHAT_MESSAGE;
 
-        public DateTime TimeStamp { get; private set; }
+        //public DateTime TimeStamp { get; private set; }
 
         public uint Price { get; private set; }
         public string Message { get; private set; }
@@ -26,7 +26,7 @@ namespace BiliLive.Commands
 
         public SuperChat(JToken json) : base(json)
         {
-            TimeStamp = GetTimeStamp(GetValue<double>("data", "ts"));
+            //TimeStamp = GetTimeStamp(GetValue<long>("data", "ts"));
 
             Price = GetValue<uint>("data", "price");
             Message = GetValue<string>("data", "message");

@@ -13,7 +13,7 @@ namespace BiliBIliDemo
         static BiliLiveListener listener;
         static void Main(string[] args)
         {
-            uint roomId = 23230185;// 189205;
+            uint roomId = 22508204;// 189205;
             listener = new BiliLiveListener(roomId);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
@@ -96,8 +96,8 @@ namespace BiliBIliDemo
                 $"Message: {cmd.Message}\r\n" +
                 $"MessageTrans: {cmd.MessageTrans}\r\n" +
                 $"Price: {cmd.Price}\r\n" +
-                $"Duration: {cmd.Duration.TotalSeconds}s\r\n" +
-                $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
+                $"Duration: {cmd.Duration.TotalSeconds}s\r\n";// +
+                //$"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
@@ -128,8 +128,8 @@ namespace BiliBIliDemo
                 $"LivePlatform: {cmd.LivePlatform}\r\n" +
                 $"RoomId: {cmd.RoomId}\r\n" +
                 $"SubSessionKey: {cmd.SubSessionKey}\r\n" +
-                $"VoiceBackground: {cmd.VoiceBackground}\r\n " +
-                $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
+                $"VoiceBackground: {cmd.VoiceBackground}\r\n";// +
+                //$"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
@@ -140,8 +140,8 @@ namespace BiliBIliDemo
                 $"UID: {cmd.UID}\r\n" +
                 $"Name: {cmd.Username}\r\n" +
                 $"Identity: {GetIndentity(cmd.Identity)}\r\n" +
-                $"MessageType: {cmd.MessageType}\r\n" +
-                $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
+                $"MessageType: {cmd.MessageType}\r\n";// +
+                //$"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
@@ -163,8 +163,8 @@ namespace BiliBIliDemo
                 $"UID: {cmd.UID}\r\n" +
                 $"Name: {cmd.Username}\r\n" +
                 $"GiftName: {cmd.GiftName}\r\n" +
-                $"GuardLevel: {cmd.GuardLevel}\r\n" +
-                $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
+                $"GuardLevel: {cmd.GuardLevel}\r\n";// +
+                //$"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
@@ -179,8 +179,8 @@ namespace BiliBIliDemo
                 $"Number: {cmd.Number}\r\n" +
                 $"Action: {cmd.Action}\r\n" +
                 $"CoinType: {cmd.CoinType}\r\n" +
-                $"FaceUri: {cmd.FaceUri}\r\n" +
-                $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
+                $"FaceUri: {cmd.FaceUri}\r\n";// +
+                //$"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
@@ -190,9 +190,8 @@ namespace BiliBIliDemo
             string msg = $"OnDamaku:\r\n" +
                 $"UID: {cmd.UID}\r\n" +
                 $"Name: {cmd.Username}\r\n" +
-                $"Message: {cmd.Message}\r\n" +
-                $"Type: {cmd.Type}\r\n" +
-                $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
+                $"Message: {cmd.Message}\r\n";
+               // $"DateTime: {cmd.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")}\r\n";
             Console.WriteLine(msg);
             Append(msg);
         }
@@ -214,7 +213,7 @@ namespace BiliBIliDemo
         {
             string msg = $"OnRaw:\r\n" +
                 $"Data: {data.RawData}\r\n";
-            //Console.WriteLine(msg);
+            Console.WriteLine(msg);
             Append(msg);
         }
 
@@ -232,8 +231,11 @@ namespace BiliBIliDemo
 
         static void Append(object obj)
         {
-            string msg = $"{GetTime()}: {obj.ToString()}\r\n";
-            File.AppendAllText("log.txt", msg);
+            lock (listener)
+            {
+                string msg = $"{GetTime()}: {obj.ToString()}\r\n";
+                File.AppendAllText("log.txt", msg);
+            }
         }
 
         private static void PopularityRecieved(uint popularity)
