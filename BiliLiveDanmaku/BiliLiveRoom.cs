@@ -15,8 +15,23 @@ using System.Threading.Tasks;
 
 namespace BiliLive
 {
-    public class BiliLiveListener
+    public class BiliLiveRoom
     {
+        private static readonly Dictionary<CommandType, FieldInfo> ListennerMapping;
+
+        static BiliLiveRoom()
+        {
+            ListennerMapping = new Dictionary<CommandType, FieldInfo>();
+            foreach (EventInfo info in typeof(BiliLiveRoom).GetEvents())
+            {
+                if (info.GetCustomAttribute<CommandTypeAttribute>() is CommandTypeAttribute attr)
+                {
+                    FieldInfo fieldInfo = typeof(BiliLiveRoom).GetField(info.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    ListennerMapping.Add(attr.Type, fieldInfo);
+                }
+            }
+        }
+
         public Protocols Protocol { get; set; }
 
         public delegate void ConnectionEventHandler();
@@ -55,8 +70,6 @@ namespace BiliLive
         [CommandType(CommandType.PREPARING)]
         public event CommandHandler<Preparing> OnPreparing;
 
-        public event CommandHandler<Command> OnRaw;
-
         [CommandType(CommandType.ROOM_BLOCK_MSG)]
         public event CommandHandler<RoomBlock> OnRoomBlock;
 
@@ -75,9 +88,12 @@ namespace BiliLive
         [CommandType(CommandType.WIDGET_BANNER)]
         public event CommandHandler<WidgetBanner> OnWidgetBanner;
 
+        [CommandType(CommandType.HTTP_API_ONLINE_USER)]
+        public event CommandHandler<OnlineUser> OnOnlineUser;
+
         public event CommandHandler<Command> OnUnknow;
 
-        private Dictionary<CommandType, FieldInfo> ListennerMapping;
+        public event CommandHandler<Command> OnRaw;
 
         private TcpClient DanmakuTcpClient { get; set; }
         private ClientWebSocket DanmakuWebSocket { get; set; }
@@ -91,27 +107,22 @@ namespace BiliLive
         private Thread EventListenerThread { get; set; }
         public bool IsRunning { get; private set; }
 
-        public BiliLiveListener(uint roomId, Protocols protocol = Protocols.Tcp)
+
+        public string Cookie { set; get; }
+
+        public BiliLiveRoom(uint roomId, string cookie, Protocols protocol = Protocols.Tcp) : this(roomId, protocol)
+        {
+            Cookie = cookie;
+        }
+
+        public BiliLiveRoom(uint roomId, Protocols protocol = Protocols.Tcp)
         {
             IsHeartbeatSenderRunning = false;
             IsRunning = false;
             RoomId = roomId;
             Protocol = protocol;
-            InitListenerMapping();
         }
 
-        private void InitListenerMapping()
-        {
-            ListennerMapping = new Dictionary<CommandType, FieldInfo>();
-            foreach (EventInfo info in GetType().GetEvents())
-            {
-                if(info.GetCustomAttribute<CommandTypeAttribute>() is CommandTypeAttribute attr)
-                {
-                    FieldInfo fieldInfo = GetType().GetField(info.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    ListennerMapping.Add(attr.Type, fieldInfo);
-                }
-            }
-        }
 
         #region Public methods
         public Task<bool> ConnectAsync() => new Task<bool>(Connect);
@@ -393,6 +404,7 @@ namespace BiliLive
                                     break;
                                 case BiliPackReader.PackTypes.Heartbeat:
                                     ServerHeartbeatRecieved?.Invoke();
+                                    OnOnlineUser?.Invoke(OnlineUser.NewInstance(Cookie));
                                     break;
                             }
                         }
@@ -419,18 +431,49 @@ namespace BiliLive
                     }
                     catch (SocketException)
                     {
-                        ConnectionFailed?.Invoke("数据读取失败");
+                        ConnectionFailed?.Invoke("数据读取失败, 正在断开连接...");
                         Disconnect();
                     }
                     catch (IOException)
                     {
-                        ConnectionFailed?.Invoke("数据读取失败");
+                        ConnectionFailed?.Invoke("数据读取失败, 正在断开连接...");
                         Disconnect();
                     }
                 }
             });
             EventListenerThread.Start();
         }
+
+        #endregion
+
+        #region Message Sender
+        
+        public class Result
+        {
+            public bool Success { get; }
+
+            public string Message { get; }
+
+            public Result(bool success, string message)
+            {
+                Success = success;
+                Message = message;
+            }
+        }
+
+        public Result Send(string message)
+        {
+            //HTTP API + COOKIE
+            return new Result(false, "error");
+        }
+
+        public Result ChangeRoomName(string name)
+        {
+            //HTTP API + COOKIE
+            return new Result(true, "OK");
+        }
+
+        
 
         #endregion
     }

@@ -87,11 +87,12 @@
   <ItemGroup>
     <Compile Include="BiliLiveInfo.cs" />
     <Compile Include="BiliLiveJsonParser.cs" />
-    <Compile Include="BiliLiveListener.cs" />
+    <Compile Include="BiliLiveRoom.cs" />
     <Compile Include="BiliPackReader.cs" />
     <Compile Include="BiliPackWriter.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\ComboSend.cs" />
+    <Compile Include="Commands\OnlineUser.cs" />
     <Compile Include="Commands\Type\CommandAttribute.cs" />
     <Compile Include="Commands\Gift.cs" />
     <Compile Include="Commands\Danmaku.cs" />

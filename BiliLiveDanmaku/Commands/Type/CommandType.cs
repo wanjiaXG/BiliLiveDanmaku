@@ -42,7 +42,7 @@
         WATCHED_CHANGE,
 
         [Command(typeof(WidgetBanner))]
-        WIDGET_BANNER
+        WIDGET_BANNER,
 
 
         //ENTRY_EFFECT,
@@ -58,5 +58,15 @@
         //USER_TOAST_MSG,
         //GUARD_LOTTERY_START,
         //GUARD_MSG,
+
+
+
+
+        #region UnDanmakuServerMessage
+
+        [Command(typeof(OnlineUser))]
+        HTTP_API_ONLINE_USER
+
+        #endregion
     }
 }

@@ -10,21 +10,21 @@ namespace BiliBIliDemo
 {
     class Program
     {
-        static BiliLiveListener listener;
+        static BiliLiveRoom listener;
         static void Main(string[] args)
         {
-            uint roomId = 9758780;// 5252;//22508204;// 189205;
-            listener = new BiliLiveListener(roomId);
+            uint roomId = 86002;// 9758780;// 5252;//22508204;// 189205;
+            listener = new BiliLiveRoom(roomId);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
             listener.Disconnected += Disconnected;
             listener.PopularityRecieved += PopularityRecieved;
             listener.ServerHeartbeatRecieved += ServerHeartbeatRecieved;
             //listener.OnRaw += OnRaw;
-            listener.OnComboSend += OnComboSend;
+            //listener.OnComboSend += OnComboSend;
             listener.OnComboSend += OnComboSend02;
 
-            listener.OnDanmaku += OnDamaku;
+            //listener.OnDanmaku += OnDamaku;
             listener.OnDanmaku += OnDamaku02;
             //listener.OnGift += OnGift;
             //listener.OnGuardBuy += OnGuardBuy;
@@ -37,6 +37,9 @@ namespace BiliBIliDemo
             //listener.OnWatchedChanged += OnWatchedChanged;
             //listener.OnWelcome += OnWelcome;
             //listener.OnWelcomeGuard += OnWelcomeGuard;
+
+            listener.OnWidgetBanner += OnWidgetBanner;
+
             listener.Connect();
 
 
@@ -52,6 +55,12 @@ namespace BiliBIliDemo
             }
         }
 
+        private static void OnWidgetBanner(WidgetBanner cmd)
+        {
+            WidgetBanner.Widget widget = cmd.WidgetList[0];
+            Console.WriteLine(widget.Title);
+        }
+
         private static void OnDamaku02(Danmaku cmd)
         {
             Console.WriteLine(cmd.Username + ": " + cmd.Message);
@@ -59,7 +68,7 @@ namespace BiliBIliDemo
 
         private static void OnComboSend02(ComboSend cmd)
         {
-
+            Console.WriteLine(cmd.Username  + " " + cmd.Action);
         }
 
         private static void OnWelcomeGuard(WelcomeGuard cmd)

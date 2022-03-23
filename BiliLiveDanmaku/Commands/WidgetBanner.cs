@@ -10,7 +10,7 @@ namespace BiliLive.Commands
 {
     public class WidgetBanner : Command
     {
-        public ICollection<Widget> WidgetList { get; private set; }
+        public Widget[] WidgetList { get; private set; }
 
         public WidgetBanner(JToken json) : base(json)
         {
@@ -19,9 +19,9 @@ namespace BiliLive.Commands
                 if (json["data"]["widget_list"] is JObject obj)
                 {
                     List<Widget> list = new List<Widget>();
-                    foreach (var key in obj.Properties())
+                    foreach (var prop in obj.Properties())
                     {
-                        list.Add(JsonConvert.DeserializeObject<Widget>(obj[key].ToString()));
+                        list.Add(JsonConvert.DeserializeObject<Widget>(obj[prop.Name].ToString()));
                     }
                     WidgetList = list.ToArray();
                 }
