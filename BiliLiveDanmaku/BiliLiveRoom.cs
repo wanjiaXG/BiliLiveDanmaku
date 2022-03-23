@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,8 +98,6 @@ namespace BiliLive
 
         private TcpClient DanmakuTcpClient { get; set; }
         private ClientWebSocket DanmakuWebSocket { get; set; }
-        private uint RoomId { get; set; }
-
         private BiliPackReader PackReader { get; set; }
         private BiliPackWriter PackWriter { get; set; }
 
@@ -107,12 +106,52 @@ namespace BiliLive
         private Thread EventListenerThread { get; set; }
         public bool IsRunning { get; private set; }
 
+        private uint RoomId { get; set; }
+        public uint UID { set; get; }
 
-        public string Cookie { set; get; }
+        private string _cookie;
+        public string Cookie
+        {
+            set
+            {
+                _cookie = value;
+                UpdateCsrfToken();
+            }
+            get
+            {
+                return _cookie;
+            }
+        }
 
-        public BiliLiveRoom(uint roomId, string cookie, Protocols protocol = Protocols.Tcp) : this(roomId, protocol)
+        public string CsrfToken { get; private set; }
+
+        public BiliLiveRoom(uint roomId, uint uid, string cookie, Protocols protocol = Protocols.Tcp) : this(roomId, protocol)
         {
             Cookie = cookie;
+            UID = uid;
+        }
+
+        private void UpdateCsrfToken()
+        {
+            //bili_jct
+            if(_cookie != null)
+            {
+                string[] items = _cookie.Split(';');
+                for(int i = 0; i < items.Length; i++)
+                {
+                    int index = items[i].IndexOf('=');
+                    if(index > 0 && index + 1 < items[i].Length)
+                    {
+                        string key = items[i].Substring(0, index).Trim();
+                        string value = items[i].Substring(index+1).Trim();
+                        if (key.ToLower().Equals("bili_jct"))
+                        {
+                            CsrfToken = value;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         public BiliLiveRoom(uint roomId, Protocols protocol = Protocols.Tcp)
@@ -395,6 +434,7 @@ namespace BiliLive
                             {
                                 case BiliPackReader.PackTypes.Popularity:
                                     PopularityRecieved?.Invoke(((BiliPackReader.PopularityPack)pack).Popularity);
+                                    OnOnlineUser?.Invoke(GetOnlineUser());
                                     break;
                                 case BiliPackReader.PackTypes.Command:
                                     JToken value = ((BiliPackReader.CommandPack)pack).Value;
@@ -404,7 +444,6 @@ namespace BiliLive
                                     break;
                                 case BiliPackReader.PackTypes.Heartbeat:
                                     ServerHeartbeatRecieved?.Invoke();
-                                    OnOnlineUser?.Invoke(OnlineUser.NewInstance(Cookie));
                                     break;
                             }
                         }
@@ -420,6 +459,10 @@ namespace BiliLive
                                     if(info.GetValue(this) is Delegate handler)
                                     {
                                         handler.DynamicInvoke(cmd);
+                                    }
+                                    if (item.CommandType == CommandType.INTERACT_WORD)
+                                    {
+                                        OnOnlineUser?.Invoke(GetOnlineUser());
                                     }
                                 }
                                 else
@@ -444,10 +487,15 @@ namespace BiliLive
             EventListenerThread.Start();
         }
 
+        private OnlineUser GetOnlineUser()
+        {
+            return OnlineUser.NewInstance(Cookie, RoomId, UID);
+        }
+
         #endregion
 
         #region Message Sender
-        
+
         public class Result
         {
             public bool Success { get; }
@@ -461,19 +509,148 @@ namespace BiliLive
             }
         }
 
-        public Result Send(string message)
+        public Result Send(string msg)
         {
-            //HTTP API + COOKIE
-            return new Result(false, "error");
+            try
+            {
+                if (msg.Length > 20)
+                {
+                    return new Result(false, $"弹幕消息: \" {msg}\"超出限制长度, 请控制在20个字以内");
+                }
+
+                string url = "https://api.live.bilibili.com/msg/send";
+
+                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+                request.ServicePoint.Expect100Continue = false;
+                request.Method = "POST";
+                request.Host = "api.live.bilibili.com";
+                request.KeepAlive = true;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36";
+                request.ContentType = "multipart/form-data; boundary=----WebKitFormBoundaryQJAfXGclnyMx6OX6";
+                request.Accept = "*/*";
+                request.Referer = "https://live.bilibili.com/";
+                request.Headers["Cookie"] = Cookie;
+                request.Headers["Origin"] = "https://live.bilibili.com";
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append("Content-Disposition: form-data; name=\"bubble\"\r\n\r\n0\r\n")
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append($"Content-Disposition: form-data; name=\"msg\"\r\n\r\n{msg}\r\n")
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append("Content-Disposition: form-data; name=\"color\"\r\n\r\n16777215\r\n")
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append("Content-Disposition: form-data; name=\"mode\"\r\n\r\n1\r\n")
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append("Content-Disposition: form-data; name=\"fontsize\"\r\n\r\n25\r\n")
+
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append("Content-Disposition: form-data; name=\"rnd\"\r\n\r\n1633713628\r\n")
+
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append($"Content-Disposition: form-data; name=\"roomid\"\r\n\r\n{RoomId}\r\n")
+
+
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append($"Content-Disposition: form-data; name=\"csrf\"\r\n\r\n{CsrfToken}\r\n")
+
+
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6\r\n")
+                    .Append($"Content-Disposition: form-data; name=\"csrf_token\"\r\n\r\n{CsrfToken}\r\n")
+                    .Append("------WebKitFormBoundaryQJAfXGclnyMx6OX6--\r\n");
+
+                byte[] buffer = Encoding.UTF8.GetBytes(sb.ToString());
+
+                request.ContentLength = buffer.Length;
+
+                request.GetRequestStream().Write(buffer, 0, buffer.Length);
+                request.GetRequestStream().Flush();
+
+                StreamReader sr = new StreamReader(request.GetResponse().GetResponseStream(), Encoding.UTF8);
+                string result = sr.ReadToEnd();
+                sr.Close();
+                sr.Dispose();
+
+                JObject json = JObject.Parse(result);
+
+                switch (Util.GetJTokenValue<int>(json, "code"))
+                {
+                    case 0:
+                        if (!string.IsNullOrWhiteSpace(Util.GetJTokenValue<string>(json, "message")))
+                        {
+                            return new Result(false, $"弹幕消息: \" {msg}\"发送失败，请重新输入");
+                        }
+                        break;
+                    case 10030:
+                    case 10031:
+                        if (!string.IsNullOrWhiteSpace(Util.GetJTokenValue<string>(json, "message")))
+                        {
+                            return new Result(false, $"弹幕消息: \" {msg}\"发送失败，您发送弹幕的频率过快");
+                        }
+                        break;
+                }
+
+                return new Result(true, "OK");
+            }
+            catch(Exception ex)
+            {
+                return new Result(false, ex.Message);
+            }
         }
 
         public Result ChangeRoomName(string name)
         {
-            //HTTP API + COOKIE
-            return new Result(true, "OK");
-        }
+            try
+            {
+                if (name.Length > 20)
+                {
+                    return new Result(false, $"超出限制长度, 请将直播间名称控制在20个字以内");
+                }
 
-        
+                string url = "https://api.live.bilibili.com/room/v1/Room/update";
+
+                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+                request.ServicePoint.Expect100Continue = false;
+                request.Method = "POST";
+                request.Host = "api.live.bilibili.com";
+                request.KeepAlive = true;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36";
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.Accept = "*/*";
+                request.Referer = "https://link.bilibili.com/p/center/index";
+                request.Headers["Cookie"] = Cookie;
+                request.Headers["Origin"] = "https://link.bilibili.com";
+
+                string PostContent = $"room_id={RoomId}&title={name}&csrf_token={CsrfToken}&csrf={CsrfToken}";
+
+                byte[] buffer = Encoding.UTF8.GetBytes(PostContent);
+
+                request.ContentLength = buffer.Length;
+
+                request.GetRequestStream().Write(buffer, 0, buffer.Length);
+                request.GetRequestStream().Flush();
+
+                StreamReader sr = new StreamReader(request.GetResponse().GetResponseStream(), Encoding.UTF8);
+                string result = sr.ReadToEnd();
+                sr.Close();
+                sr.Dispose();
+                JObject json = JObject.Parse(result);
+
+                switch (Util.GetJTokenValue<int>(json, "code"))
+                {
+                    case 0:
+                        return new Result(true, "OK");
+                    default:
+                        return new Result(false, Util.GetJTokenValue<string>(json, "msg"));
+                }
+                
+                
+            }
+            catch (Exception ex)
+            {
+                return new Result(false, ex.Message);
+            }
+        }
 
         #endregion
     }

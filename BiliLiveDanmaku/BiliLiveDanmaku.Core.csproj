@@ -110,6 +110,7 @@
     <Compile Include="DanmakuServer.cs" />
     <Compile Include="Protocols.cs" />
     <Compile Include="Commands\WatchedChanged.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

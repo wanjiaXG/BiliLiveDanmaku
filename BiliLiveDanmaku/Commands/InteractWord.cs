@@ -42,7 +42,7 @@ namespace BiliLive.Commands
             {
                 foreach (JToken item in list)
                 {
-                    identities.Add(GetJTokenValue<Identities>(item));
+                    identities.Add(Util.GetJTokenValue<Identities>(item));
                 }
             }
             Identity = identities.ToArray();

@@ -13,8 +13,9 @@ namespace BiliBIliDemo
         static BiliLiveRoom listener;
         static void Main(string[] args)
         {
-            uint roomId = 86002;// 9758780;// 5252;//22508204;// 189205;
-            listener = new BiliLiveRoom(roomId);
+            uint roomId = 189205;// 86002;// 9758780;// 5252;//22508204;// 189205;
+            string cookie = File.ReadAllText("D://cookie.txt");
+            listener = new BiliLiveRoom(roomId, 826842, cookie);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
             listener.Disconnected += Disconnected;
@@ -40,19 +41,34 @@ namespace BiliBIliDemo
 
             listener.OnWidgetBanner += OnWidgetBanner;
 
+            listener.OnOnlineUser += OnOnlineUser;
+
             listener.Connect();
+        }
 
 
+        static int i = 10;
+        private static void OnOnlineUser(OnlineUser cmd)
+        {
+            Console.WriteLine("在线人数:" + cmd.Count + ", 成员:" + GetNames(cmd.Users));
+            var msg = listener.Send("在线人数:" + cmd.Count);
+            Console.WriteLine(msg.Message);
+            msg = listener.ChangeRoomName("TEST" + (i++));
+            Console.WriteLine(msg.Message);
+        }
 
-            //23801978
-            while (true)
+        private static string GetNames(OnlineUser.User[] users)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach(var item in users)
             {
-                string cmd = Console.ReadLine();
-                if ("exit".Equals(cmd))
-                {
-                    break;
-                }
+                sb.Append(item.Username).Append(",");
             }
+            if(sb.Length > 0)
+            {
+                sb.Remove(sb.Length - 1, 1);
+            }
+            return sb.ToString();
         }
 
         private static void OnWidgetBanner(WidgetBanner cmd)

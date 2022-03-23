@@ -59,9 +59,6 @@
         //GUARD_LOTTERY_START,
         //GUARD_MSG,
 
-
-
-
         #region UnDanmakuServerMessage
 
         [Command(typeof(OnlineUser))]
