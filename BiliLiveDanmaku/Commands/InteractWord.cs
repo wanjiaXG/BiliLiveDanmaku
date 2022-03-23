@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 
 namespace BiliLive.Commands
@@ -28,11 +27,6 @@ namespace BiliLive.Commands
             SpecialAttention,
             MutualAttention
         }
-
-        public override CommandType CommandType => CommandType.INTERACT_WORD;
-
-        //public DateTime TimeStamp { get; private set; }
-
         public uint UID { get; }
         public string Username { get; }
         public ICollection<Identities> Identity { get; private set; }
@@ -53,7 +47,6 @@ namespace BiliLive.Commands
             }
             Identity = identities.ToArray();
             MessageType = GetValue<MessageTypes>("data", "msg_type");
-            //TimeStamp = GetTimeStamp(GetValue<long>("data", "timestamp"));
         }
     }
 }

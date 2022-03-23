@@ -1,53 +1,34 @@
 ﻿using BiliLive.Commands;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Reflection;
 
 namespace BiliLive
 {
     public class BiliLiveJsonParser
     {
-        public static Command Parse(JToken json)
-        {
-            string[] cmd = (json["cmd"].ToString()).Split(':');
-            switch (cmd[0])
+        public static Command Parse(JToken json) { 
+        
+            if(json.Type == JTokenType.Object && 
+                json is JObject obj && 
+                obj.ContainsKey("cmd"))
             {
-                case "DANMU_MSG":
-                    return new Danmaku(json);
-                case "SUPER_CHAT_MESSAGE":
-                    return new SuperChat(json);
-                case "SEND_GIFT":
-                    return new Gift(json);
-                case "COMBO_SEND":
-                    return new ComboSend(json);
-                case "WELCOME":
-                    return new Welcome(json);
-                case "WELCOME_GUARD":
-                    return new WelcomeGuard(json);
-                case "GUARD_BUY":
-                    return new GuardBuy(json);
-                case "INTERACT_WORD":
-                    return new InteractWord(json);
-                case "ROOM_BLOCK_MSG":
-                    return new RoomBlock(json);
-                case "WATCHED_CHANGE":
-                    return new WatchedChanged(json);
-                case "LIVE":
-                    return new Live(json);
-                case "PREPARING":
-                    return new Preparing(json);
-                case "SPECIAL_GIFT":
-                case "USER_TOAST_MSG":
-                case "GUARD_MSG":
-                case "GUARD_LOTTERY_START":
-                case "ENTRY_EFFECT":
-                case "SYS_MSG":
-                case "ROOM_RANK":
-                case "TV_START":
-                case "NOTICE_MSG":
-                case "SYS_GIFT":
-                case "ROOM_REAL_TIME_MESSAGE_UPDATE":
-                default:
-                    return new Command(json);
+                try
+                {
+                    if (typeof(CommandType).GetMember(json["cmd"].ToString()) is MemberInfo[] infos &&
+                        infos.Length > 0 &&
+                        infos[0].GetCustomAttribute<CommandAttribute>() is CommandAttribute attr)
+                    {
+                        ConstructorInfo constructor = attr.Type.GetConstructor(new Type[] { typeof(JToken) });
+                        return constructor.Invoke(new object[] { json }) as Command;
+                    }
+                }
+                catch
+                {
+                    //出错了
+                }
             }
+            return new Command(json);
         }
     }
 }

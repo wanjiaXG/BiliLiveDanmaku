@@ -4,12 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+
+#pragma warning disable 0067
 
 namespace BiliLive
 {
@@ -21,6 +23,8 @@ namespace BiliLive
         public event ConnectionEventHandler Connected;
         public event ConnectionEventHandler Disconnected;
 
+        public delegate void CommandHandler<T>(T cmd) where T : Command;
+
         public delegate void ConnectionFailedHandler(string message);
         public event ConnectionFailedHandler ConnectionFailed;
 
@@ -30,48 +34,50 @@ namespace BiliLive
         public delegate void PopularityRecievedHandler(uint popularity);
         public event PopularityRecievedHandler PopularityRecieved;
 
-        public delegate void ComboSendHandler(ComboSend cmd);
-        public event ComboSendHandler OnComboSend;
+        [CommandType(CommandType.COMBO_SEND)]
+        public event CommandHandler<ComboSend> OnComboSend;
 
-        public delegate void DanmakuHandler(Danmaku cmd);
-        public event DanmakuHandler OnDamaku;
+        [CommandType(CommandType.DANMU_MSG)]
+        public event CommandHandler<Danmaku> OnDanmaku;
 
-        public delegate void GiftHandler(Gift cmd);
-        public event GiftHandler OnGift;
+        [CommandType(CommandType.SEND_GIFT)]
+        public event CommandHandler<Gift> OnGift;
 
-        public delegate void GuardBuyHandler(GuardBuy cmd);
-        public event GuardBuyHandler OnGuardBuy;
+        [CommandType(CommandType.GUARD_BUY)]
+        public event CommandHandler<GuardBuy> OnGuardBuy;
 
-        public delegate void InteractWordHandler(InteractWord cmd);
-        public event InteractWordHandler OnInteractWord;
+        [CommandType(CommandType.INTERACT_WORD)]
+        public event CommandHandler<InteractWord> OnInteractWord;
 
-        public delegate void LiveHandler(Live cmd);
-        public event LiveHandler OnLive;
+        [CommandType(CommandType.LIVE)]
+        public event CommandHandler<Live> OnLive;
 
-        public delegate void PreparingHandler(Preparing cmd);
-        public event PreparingHandler OnPreparing;
+        [CommandType(CommandType.PREPARING)]
+        public event CommandHandler<Preparing> OnPreparing;
 
-        public delegate void RawHandler(Command cmd);
-        public event RawHandler OnRaw;
+        public event CommandHandler<Command> OnRaw;
 
-        public delegate void RoomBlockHandler(RoomBlock cmd);
-        public event RoomBlockHandler OnRoomBlock;
+        [CommandType(CommandType.ROOM_BLOCK_MSG)]
+        public event CommandHandler<RoomBlock> OnRoomBlock;
 
-        public delegate void SuperChatHandler(SuperChat cmd);
-        public event SuperChatHandler OnSuperChat;
+        [CommandType(CommandType.SUPER_CHAT_MESSAGE)]
+        public event CommandHandler<SuperChat> OnSuperChat;
 
-        public delegate void WatchedChangedHandler(WatchedChanged cmd);
-        public event WatchedChangedHandler OnWatchedChanged;
+        [CommandType(CommandType.WATCHED_CHANGE)]
+        public event CommandHandler<WatchedChanged> OnWatchedChanged;
 
-        public delegate void WelcomeHandler(Welcome cmd);
-        public event WelcomeHandler OnWelcome;
+        [CommandType(CommandType.WELCOME)]
+        public event CommandHandler<Welcome> OnWelcome;
 
-        public delegate void WelcomeGuardHandler(WelcomeGuard cmd);
-        public event WelcomeGuardHandler OnWelcomeGuard;
+        [CommandType(CommandType.WELCOME_GUARD)]
+        public event CommandHandler<WelcomeGuard> OnWelcomeGuard;
 
-        public delegate void UnknowGuardHandler(Command cmd);
-        public event UnknowGuardHandler OnUnknow;
+        [CommandType(CommandType.WIDGET_BANNER)]
+        public event CommandHandler<WidgetBanner> OnWidgetBanner;
 
+        public event CommandHandler<Command> OnUnknow;
+
+        private Dictionary<CommandType, FieldInfo> ListennerMapping;
 
         private TcpClient DanmakuTcpClient { get; set; }
         private ClientWebSocket DanmakuWebSocket { get; set; }
@@ -82,14 +88,8 @@ namespace BiliLive
 
         private Thread HeartbeatSenderThread { get; set; }
         private bool IsHeartbeatSenderRunning { get; set; }
-
         private Thread EventListenerThread { get; set; }
         public bool IsRunning { get; private set; }
-
-        /// <summary>
-        /// Constructor 
-        /// </summary>
-        /// <param name="roomId"></param>
 
         public BiliLiveListener(uint roomId, Protocols protocol = Protocols.Tcp)
         {
@@ -97,10 +97,23 @@ namespace BiliLive
             IsRunning = false;
             RoomId = roomId;
             Protocol = protocol;
+            InitListenerMapping();
         }
-        
-        #region Public methods
 
+        private void InitListenerMapping()
+        {
+            ListennerMapping = new Dictionary<CommandType, FieldInfo>();
+            foreach (EventInfo info in GetType().GetEvents())
+            {
+                if(info.GetCustomAttribute<CommandTypeAttribute>() is CommandTypeAttribute attr)
+                {
+                    FieldInfo fieldInfo = GetType().GetField(info.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    ListennerMapping.Add(attr.Type, fieldInfo);
+                }
+            }
+        }
+
+        #region Public methods
         public Task<bool> ConnectAsync() => new Task<bool>(Connect);
 
         public bool Connect()
@@ -234,7 +247,6 @@ namespace BiliLive
         #endregion
 
         #region Room info
-
         private long GetRealRoomId(long roomId)
         {
             try
@@ -297,13 +309,11 @@ namespace BiliLive
                 ConnectionFailed?.Invoke("直播间信息获取失败");
                 return null;
             }
-
         }
 
         #endregion
 
         #region Heartbeat Sender
-
         private void StopHeartbeatSender()
         {
             IsHeartbeatSenderRunning = false;
@@ -346,7 +356,6 @@ namespace BiliLive
         #endregion
 
         #region Event listener
-
         private void StopEventListener()
         {
             IsRunning = false;
@@ -391,67 +400,21 @@ namespace BiliLive
                         foreach (var item in items)
                         {
                             OnRaw?.Invoke(item);
-
                             if (item is Command cmd)
                             {
-                                switch (cmd.CommandType)
+                                if (ListennerMapping.ContainsKey(item.CommandType))
                                 {
-                                    case CommandType.COMBO_SEND:
-                                        OnComboSend?.Invoke(item as ComboSend);
-                                        break;
-
-                                    case CommandType.DANMU_MSG:
-                                        OnDamaku?.Invoke(item as Danmaku);
-                                        break;
-
-                                    case CommandType.SEND_GIFT:
-                                        OnGift?.Invoke(item as Gift);
-                                        break;
-
-                                    case CommandType.GUARD_BUY:
-                                        OnGuardBuy?.Invoke(item as GuardBuy);
-                                        break;
-
-                                    case CommandType.INTERACT_WORD:
-                                        OnInteractWord?.Invoke(item as InteractWord);
-                                        break;
-
-                                    case CommandType.LIVE:
-                                        OnLive?.Invoke(item as Live);
-                                        break;
-
-                                    case CommandType.PREPARING:
-                                        OnPreparing?.Invoke(item as Preparing);
-                                        break;
-
-                                    case CommandType.ROOM_BLOCK_MSG:
-                                        OnRoomBlock?.Invoke(item as RoomBlock);
-                                        break;
-
-                                    case CommandType.SUPER_CHAT_MESSAGE:
-                                        OnSuperChat?.Invoke(item as SuperChat);
-                                        break;
-
-                                    case CommandType.WATCHED_CHANGE:
-                                        OnWatchedChanged?.Invoke(item as WatchedChanged);
-                                        break;
-
-                                    case CommandType.WELCOME:
-                                        OnWelcome?.Invoke(item as Welcome);
-                                        break;
-
-                                    case CommandType.WELCOME_GUARD:
-                                        OnWelcomeGuard?.Invoke(item as WelcomeGuard);
-                                        break;
-
-                                    default:
-                                        OnUnknow?.Invoke(item);
-                                        break;
+                                    var info = ListennerMapping[item.CommandType];
+                                    if(info.GetValue(this) is Delegate handler)
+                                    {
+                                        handler.DynamicInvoke(cmd);
+                                    }
+                                }
+                                else
+                                {
+                                    OnUnknow?.Invoke(item);
                                 }
                             }
-
-
-
                         }
                     }
                     catch (SocketException)
@@ -465,10 +428,7 @@ namespace BiliLive
                         Disconnect();
                     }
                 }
-            })
-            {
-
-            };
+            });
             EventListenerThread.Start();
         }
 

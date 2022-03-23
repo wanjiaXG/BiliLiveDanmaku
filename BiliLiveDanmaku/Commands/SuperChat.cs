@@ -1,20 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace BiliLive.Commands
 {
-    [Serializable]
     public class SuperChat : Command
     {
-        public override CommandType CommandType => CommandType.SUPER_CHAT_MESSAGE;
-
-        //public DateTime TimeStamp { get; private set; }
-
         public uint Price { get; private set; }
         public string Message { get; private set; }
         public bool TransMark { get; private set; }
@@ -26,8 +16,6 @@ namespace BiliLive.Commands
 
         public SuperChat(JToken json) : base(json)
         {
-            //TimeStamp = GetTimeStamp(GetValue<long>("data", "ts"));
-
             Price = GetValue<uint>("data", "price");
             Message = GetValue<string>("data", "message");
             TransMark = GetValue<int>("data", "trans_mark") != 0;

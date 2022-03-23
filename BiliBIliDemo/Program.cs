@@ -13,27 +13,30 @@ namespace BiliBIliDemo
         static BiliLiveListener listener;
         static void Main(string[] args)
         {
-            uint roomId = 22508204;// 189205;
+            uint roomId = 9758780;// 5252;//22508204;// 189205;
             listener = new BiliLiveListener(roomId);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
             listener.Disconnected += Disconnected;
             listener.PopularityRecieved += PopularityRecieved;
             listener.ServerHeartbeatRecieved += ServerHeartbeatRecieved;
-            listener.OnRaw += OnRaw;
+            //listener.OnRaw += OnRaw;
             listener.OnComboSend += OnComboSend;
-            listener.OnDamaku += OnDamaku;
-            listener.OnGift += OnGift;
-            listener.OnGuardBuy += OnGuardBuy;
-            listener.OnInteractWord += OnInteractWord;
-            listener.OnLive += OnLive;
-            listener.OnPreparing += OnPreparing;
-            listener.OnRoomBlock += OnRoomBlock;
-            listener.OnSuperChat += OnSuperChat;
-            listener.OnUnknow += OnUnknow;
-            listener.OnWatchedChanged += OnWatchedChanged;
-            listener.OnWelcome += OnWelcome;
-            listener.OnWelcomeGuard += OnWelcomeGuard;
+            listener.OnComboSend += OnComboSend02;
+
+            listener.OnDanmaku += OnDamaku;
+            listener.OnDanmaku += OnDamaku02;
+            //listener.OnGift += OnGift;
+            //listener.OnGuardBuy += OnGuardBuy;
+            //listener.OnInteractWord += OnInteractWord;
+            //listener.OnLive += OnLive;
+            //listener.OnPreparing += OnPreparing;
+            //listener.OnRoomBlock += OnRoomBlock;
+            //listener.OnSuperChat += OnSuperChat;
+            //listener.OnUnknow += OnUnknow;
+            //listener.OnWatchedChanged += OnWatchedChanged;
+            //listener.OnWelcome += OnWelcome;
+            //listener.OnWelcomeGuard += OnWelcomeGuard;
             listener.Connect();
 
 
@@ -47,6 +50,16 @@ namespace BiliBIliDemo
                     break;
                 }
             }
+        }
+
+        private static void OnDamaku02(Danmaku cmd)
+        {
+            Console.WriteLine(cmd.Username + ": " + cmd.Message);
+        }
+
+        private static void OnComboSend02(ComboSend cmd)
+        {
+
         }
 
         private static void OnWelcomeGuard(WelcomeGuard cmd)

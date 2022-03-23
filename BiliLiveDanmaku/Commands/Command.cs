@@ -1,16 +1,12 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace BiliLive.Commands
 {
     public class Command
     {
-        public virtual CommandType CommandType { get; } = CommandType.UNKNOW;
+        public CommandType CommandType { get; } = CommandType.UNKNOW;
 
         public string RawData { get; }
 
@@ -20,6 +16,7 @@ namespace BiliLive.Commands
         {
             Json = json;
             RawData = Json?.ToString(Newtonsoft.Json.Formatting.None);
+            CommandType = GetValue<CommandType>("cmd");
         }
         protected T GetValue<T>(params object[] keys)
         {
@@ -105,13 +102,6 @@ namespace BiliLive.Commands
 
         }
 
-
-/*        protected DateTime GetTimeStamp(long time)
-        {
-
-            return new DateTime(1970, 01, 01).AddMilliseconds(time);
-        }
-    */
     }
 
 }
