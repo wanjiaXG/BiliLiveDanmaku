@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using BiliLive.Commands.Enums;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Text.RegularExpressions;
 
+//已检查无运行异常
 namespace BiliLive.Commands
 {
     public class Command
@@ -14,17 +15,45 @@ namespace BiliLive.Commands
 
         public Command(JToken json)
         {
-            Json = json;
-            RawData = Json?.ToString(Newtonsoft.Json.Formatting.None);
+            Json = json ?? new JObject();
+            RawData = Json.ToString(Newtonsoft.Json.Formatting.None);
             CommandType = GetValue<CommandType>("cmd");
         }
         protected T GetValue<T>(params object[] keys)
         {
-            return Util.GetJTokenValue<T>(Json, keys);
+            T obj = Util.GetJTokenValue<T>(Json, keys);
+            Type type = typeof(T);
+
+            if(obj == null)
+            {
+                if (type.Equals(typeof(string)))
+                {
+                    return (T)((object)string.Empty);
+                }
+                else if (type.Equals(typeof(CommandType)))
+                {
+                    return (T)((object)CommandType.UNKNOW);
+                }
+                else if (type.Equals(typeof(Identities)))
+                {
+                    return (T)((object)Identities.Unknown);
+                }
+                else if (type.Equals(typeof(MessageTypes)))
+                {
+                    return (T)((object)MessageTypes.Unknown);
+                }
+                else if (type.Equals(typeof(JObject)))
+                {
+                    return (T)((object)new JObject());
+                }
+                else if (type.Equals(typeof(JArray)))
+                {
+                    return (T)((object)new JArray());
+                }
+            }
+
+            return obj;
         }
-
-        
-
     }
 
 }

@@ -1,4 +1,5 @@
-﻿namespace BiliLive.Commands
+﻿//已检查无运行异常
+namespace BiliLive.Commands.Attribute
 {
     public class CommandAttribute : System.Attribute
     {

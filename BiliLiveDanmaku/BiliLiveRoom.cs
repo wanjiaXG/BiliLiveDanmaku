@@ -1,4 +1,8 @@
 ﻿using BiliLive.Commands;
+using BiliLive.Commands.Attribute;
+using BiliLive.Commands.Enums;
+using BiliLive.Packs;
+using BiliLive.Packs.Enums;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -131,19 +135,27 @@ namespace BiliLive
             UID = uid;
         }
 
+        public BiliLiveRoom(uint roomId, Protocols protocol = Protocols.Tcp)
+        {
+            IsHeartbeatSenderRunning = false;
+            IsRunning = false;
+            RoomId = roomId;
+            Protocol = protocol;
+        }
+
         private void UpdateCsrfToken()
         {
             //bili_jct
-            if(_cookie != null)
+            if (_cookie != null)
             {
                 string[] items = _cookie.Split(';');
-                for(int i = 0; i < items.Length; i++)
+                for (int i = 0; i < items.Length; i++)
                 {
                     int index = items[i].IndexOf('=');
-                    if(index > 0 && index + 1 < items[i].Length)
+                    if (index > 0 && index + 1 < items[i].Length)
                     {
                         string key = items[i].Substring(0, index).Trim();
-                        string value = items[i].Substring(index+1).Trim();
+                        string value = items[i].Substring(index + 1).Trim();
                         if (key.ToLower().Equals("bili_jct"))
                         {
                             CsrfToken = value;
@@ -154,47 +166,37 @@ namespace BiliLive
             }
         }
 
-        public BiliLiveRoom(uint roomId, Protocols protocol = Protocols.Tcp)
-        {
-            IsHeartbeatSenderRunning = false;
-            IsRunning = false;
-            RoomId = roomId;
-            Protocol = protocol;
-        }
-
-
         #region Public methods
-        public Task<bool> ConnectAsync() => new Task<bool>(Connect);
 
         public bool Connect()
         {
             try
             {
-                DanmakuServer danmakuServer = GetDanmakuServer(RoomId);
+                DanmakuServer danmakuServer = GetDanmakuServer();
                 if (danmakuServer == null)
                     return false;
 
                 switch (Protocol)
                 {
                     case Protocols.Tcp:
-                        DanmakuTcpClient = GetTcpConnection(danmakuServer);
-                        Stream stream = DanmakuTcpClient.GetStream();
-
-                        stream.ReadTimeout = 30 * 1000 + 1000;
-                        stream.WriteTimeout = 30 * 1000 + 1000;
-
-                        PackReader = new BiliPackReader(stream);
-                        PackWriter = new BiliPackWriter(stream);
+                        
+                        if(GetTcpConnection(danmakuServer) is TcpClient tcpClient && tcpClient.GetStream() is Stream stream)
+                        {
+                            DanmakuTcpClient = tcpClient;
+                            stream.ReadTimeout = 30 * 1000 + 1000;
+                            stream.WriteTimeout = 30 * 1000 + 1000;
+                            PackReader = new BiliPackReader(stream);
+                            PackWriter = new BiliPackWriter(stream);
+                        }
                         break;
                     case Protocols.Ws:
-                        DanmakuWebSocket = GetWsConnection(danmakuServer);
-                        PackReader = new BiliPackReader(DanmakuWebSocket);
-                        PackWriter = new BiliPackWriter(DanmakuWebSocket);
-                        break;
                     case Protocols.Wss:
-                        DanmakuWebSocket = GetWssConnection(danmakuServer);
-                        PackReader = new BiliPackReader(DanmakuWebSocket);
-                        PackWriter = new BiliPackWriter(DanmakuWebSocket);
+                        if (GetWsConnection(danmakuServer) is ClientWebSocket client)
+                        {
+                            PackReader = new BiliPackReader(client);
+                            PackWriter = new BiliPackWriter(client);
+                            DanmakuWebSocket = client;
+                        }
                         break;
                 }
 
@@ -206,7 +208,6 @@ namespace BiliLive
 
                 StartEventListener();
                 StartHeartbeatSender();
-
                 Connected?.Invoke();
                 return true;
             }
@@ -216,10 +217,9 @@ namespace BiliLive
             }
         }
 
-        public Task DisconnectAsync() => new Task(Disconnect);
-
         public void Disconnect()
         {
+            IsRunning = false;
             StopEventListener();
             StopHeartbeatSender();
             if (DanmakuTcpClient != null)
@@ -229,7 +229,12 @@ namespace BiliLive
                 try { DanmakuWebSocket.Abort(); } catch { }
 
                 try { DanmakuWebSocket.Dispose(); } catch { }
-                  
+            }
+
+            if(PackReader != null)
+            {
+                try { PackReader.BaseStream.Close(); } catch { }
+                try { PackReader.BaseStream.Dispose(); } catch { }
             }
             Disconnected?.Invoke();
         }
@@ -277,17 +282,7 @@ namespace BiliLive
                 PackWriter.SendMessage((int)BiliPackWriter.MessageType.CONNECT, initMsg.ToString());
                 return true;
             }
-            catch (SocketException)
-            {
-                ConnectionFailed?.Invoke("连接请求发送失败");
-                return false;
-            }
-            catch (InvalidOperationException)
-            {
-                ConnectionFailed?.Invoke("连接请求发送失败");
-                return false;
-            }
-            catch (IOException)
+            catch
             {
                 ConnectionFailed?.Invoke("连接请求发送失败");
                 return false;
@@ -301,7 +296,7 @@ namespace BiliLive
         {
             try
             {
-                string url = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId;
+                string url = $"https://api.live.bilibili.com/room/v1/Room/room_init?id={roomId}" ;
                 using (WebClient client = new WebClient())
                 {
                     string result = client.DownloadString(url);
@@ -322,39 +317,29 @@ namespace BiliLive
 
         }
 
-        private DanmakuServer GetDanmakuServer(long roomId)
+        private DanmakuServer GetDanmakuServer()
         {
-            roomId = GetRealRoomId(roomId);
-            if (roomId < 0)
-            {
-                return null;
-            }
             try
             {
                 using(WebClient client = new WebClient())
                 {
-                    string url = "https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=" + roomId;
-                    string result = client.DownloadString(url);
-                    JObject json = JObject.Parse(result);
-                    if (json!=null && json.ContainsKey("code") && int.Parse(json["code"].ToString()) != 0)
-                    {
-                        return null;
-                    }
-
+                    string url = $"https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id={RoomId}";
+                    JObject json = Util.GetJTokenValue<JObject>(JObject.Parse(client.DownloadString(url)), "data");
+                    JObject host = Util.GetJTokenValue<JObject>(json, "host_server_list", 0);
                     DanmakuServer danmakuServer = new DanmakuServer
                     {
-                        RoomId = roomId,
-                        Server = json["data"]["host_server_list"][0]["host"].ToString(),
-                        Port = int.Parse(json["data"]["host_server_list"][0]["port"].ToString()),
-                        WsPort = int.Parse(json["data"]["host_server_list"][0]["ws_port"].ToString()),
-                        WssPort = int.Parse(json["data"]["host_server_list"][0]["wss_port"].ToString()),
-                        Token = json["data"]["token"].ToString()
+                        RoomId = RoomId,
+                        Server = Util.GetJTokenValue<string>(host, "host"),
+                        Port = Util.GetJTokenValue<int>(host, "port"),
+                        WsPort = Util.GetJTokenValue<int>(host, "ws_port"),
+                        WssPort = Util.GetJTokenValue<int>(host, "wss_port"),
+                        Token = Util.GetJTokenValue<string>(json, "token"),
                     };
 
                     return danmakuServer;
                 }
             }
-            catch (WebException)
+            catch
             {
                 ConnectionFailed?.Invoke("直播间信息获取失败");
                 return null;
@@ -383,19 +368,9 @@ namespace BiliLive
                     {
                         PackWriter.SendMessage((int)BiliPackWriter.MessageType.HEARTBEAT, "[object Object]");
                     }
-                    catch (SocketException)
+                    catch(Exception e)
                     {
-                        ConnectionFailed?.Invoke("心跳包发送失败");
-                        Disconnect();
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        ConnectionFailed?.Invoke("心跳包发送失败");
-                        Disconnect();
-                    }
-                    catch (IOException)
-                    {
-                        ConnectionFailed?.Invoke("心跳包发送失败");
+                        ConnectionFailed?.Invoke($"心跳包发送失败, {e.Message}");
                         Disconnect();
                     }
                     Thread.Sleep(30 * 1000);
@@ -424,25 +399,40 @@ namespace BiliLive
                 {
                     try
                     {
-                        BiliPackReader.IPack[] packs = PackReader.ReadPacksAsync();
+                        Pack[] packs = PackReader.ReadPacksAsync();
+
+                        if(packs == null)
+                        {
+                            throw new Exception("Data is null.");
+                        }
 
                         List<Command> items = new List<Command>();
 
-                        foreach (BiliPackReader.IPack pack in packs)
+                        foreach (Pack pack in packs)
                         {
                             switch (pack.PackType)
                             {
-                                case BiliPackReader.PackTypes.Popularity:
-                                    PopularityRecieved?.Invoke(((BiliPackReader.PopularityPack)pack).Popularity);
-                                    OnOnlineUser?.Invoke(GetOnlineUser());
+                                case PackTypes.Popularity:
+                                    if(pack is PopularityPack popularityPack)
+                                    {
+                                        PopularityRecieved?.Invoke(popularityPack.Popularity);
+                                    }
+                                    if(GetOnlineUser() is OnlineUser user)
+                                    {
+                                        OnOnlineUser?.Invoke(user);
+                                    }
                                     break;
-                                case BiliPackReader.PackTypes.Command:
-                                    JToken value = ((BiliPackReader.CommandPack)pack).Value;
-                                    Command item = BiliLiveJsonParser.Parse(value);
-                                    if (item != null)
-                                        items.Add(item);
+                                case PackTypes.Command:
+                                    if(pack is CommandPack commandPack &&
+                                        commandPack.Value is JToken value
+                                    ) { 
+                                        if(BiliLiveJsonParser.Parse(value) is Command cmd)
+                                        {
+                                            items.Add(cmd);
+                                        }
+                                    }
                                     break;
-                                case BiliPackReader.PackTypes.Heartbeat:
+                                case PackTypes.Heartbeat:
                                     ServerHeartbeatRecieved?.Invoke();
                                     break;
                             }
@@ -472,14 +462,9 @@ namespace BiliLive
                             }
                         }
                     }
-                    catch (SocketException)
+                    catch(Exception e)
                     {
-                        ConnectionFailed?.Invoke("数据读取失败, 正在断开连接...");
-                        Disconnect();
-                    }
-                    catch (IOException)
-                    {
-                        ConnectionFailed?.Invoke("数据读取失败, 正在断开连接...");
+                        ConnectionFailed?.Invoke($"{e.Message}. 数据读取失败, 正在断开连接...");
                         Disconnect();
                     }
                 }

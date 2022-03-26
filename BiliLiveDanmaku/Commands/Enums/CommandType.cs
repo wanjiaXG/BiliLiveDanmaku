@@ -1,4 +1,7 @@
-﻿namespace BiliLive.Commands
+﻿//已检查无运行异常
+using BiliLive.Commands.Attribute;
+
+namespace BiliLive.Commands.Enums
 {
     public enum CommandType
     {

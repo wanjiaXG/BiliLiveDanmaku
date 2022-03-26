@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 
+//已检查无运行异常
 namespace BiliLive.Commands
 {
     public class SuperChat : Command

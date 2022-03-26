@@ -1,20 +1,22 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
+//已检查无误
 namespace BiliLive
 {
     public class Util
     {
-        public static T GetJTokenValue<T>(JToken json, params object[] keys)
+        public static T GetJTokenValue<T>(JToken json,  params object[] keys)
         {
             if (json == null)
             {
                 return default;
+            }
+
+            if(keys == null || keys.Length <= 0)
+            {
+                return ChangeType<T>(json);
             }
 
             bool isOK = true;
@@ -62,19 +64,30 @@ namespace BiliLive
 
             if (isOK)
             {
+                return ChangeType<T>(current, default);
+            }
+
+            return default;
+
+        }
+
+        public static T ChangeType<T>(object obj) => ChangeType<T>(obj, default);
+
+        public static T ChangeType<T>(object obj, T dvalue)
+        {
+            if (obj != null)
+            {
                 try
                 {
                     if (typeof(string).Equals(typeof(T)))
                     {
-                        return (T)Convert.ChangeType(Regex.Unescape(current.ToString()), typeof(T));
+                        return (T)Convert.ChangeType(Regex.Unescape(obj.ToString()), typeof(T));
                     }
 
-                    return (T)Convert.ChangeType(current, typeof(T));
+                    return (T)Convert.ChangeType(obj, typeof(T));
                 }
                 catch
                 {
-                    //尝试方法二
-                    object obj = current;
                     try
                     {
                         return (T)obj;
@@ -85,9 +98,9 @@ namespace BiliLive
                     }
                 }
             }
-
-            return default;
-
+            return dvalue;
         }
+
+
     }
 }

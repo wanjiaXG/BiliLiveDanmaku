@@ -82,29 +82,36 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BiliLiveInfo.cs" />
     <Compile Include="BiliLiveJsonParser.cs" />
     <Compile Include="BiliLiveRoom.cs" />
     <Compile Include="BiliPackReader.cs" />
     <Compile Include="BiliPackWriter.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\ComboSend.cs" />
+    <Compile Include="Commands\Enums\Identities.cs" />
+    <Compile Include="Commands\Enums\MessageTypes.cs" />
     <Compile Include="Commands\OnlineUser.cs" />
-    <Compile Include="Commands\Type\CommandAttribute.cs" />
+    <Compile Include="Commands\Attributes\CommandAttribute.cs" />
     <Compile Include="Commands\Gift.cs" />
     <Compile Include="Commands\Danmaku.cs" />
     <Compile Include="Commands\GuardBuy.cs" />
-    <Compile Include="Commands\Type\CommandType.cs" />
+    <Compile Include="Commands\Enums\CommandType.cs" />
     <Compile Include="Commands\InteractWord.cs" />
     <Compile Include="Commands\Live.cs" />
     <Compile Include="Commands\Preparing.cs" />
     <Compile Include="Commands\RoomBlock.cs" />
     <Compile Include="Commands\SuperChat.cs" />
-    <Compile Include="Commands\Type\CommandTypeAttribute.cs" />
+    <Compile Include="Commands\Attributes\CommandTypeAttribute.cs" />
     <Compile Include="Commands\Welcome.cs" />
     <Compile Include="Commands\WelcomeGuard.cs" />
     <Compile Include="Commands\WidgetBanner.cs" />
     <Compile Include="DanmakuServer.cs" />
+    <Compile Include="Packs\CommandPack.cs" />
+    <Compile Include="Packs\Enums\DataTypes.cs" />
+    <Compile Include="Packs\Enums\PackTypes.cs" />
+    <Compile Include="Packs\HeartbeatPack.cs" />
+    <Compile Include="Packs\Pack.cs" />
+    <Compile Include="Packs\PopularityPack.cs" />
     <Compile Include="Protocols.cs" />
     <Compile Include="Commands\WatchedChanged.cs" />
     <Compile Include="Util.cs" />
@@ -136,5 +143,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

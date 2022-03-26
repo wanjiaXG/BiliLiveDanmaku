@@ -26,31 +26,42 @@ namespace BiliLive
 
         public void SendMessage(int messageType, string message)
         {
-            byte[] messageArray = Encoding.UTF8.GetBytes(message);
-            int dataLength = messageArray.Length + 16;
-
-            MemoryStream buffer = new MemoryStream(dataLength);
-            // Data length (4)
-            buffer.Write(ToBE(BitConverter.GetBytes(dataLength)), 0, 4);
-            // Header length and Data type (4)
-            buffer.Write(new byte[] { 0x00, 0x10, 0x00, 0x01 }, 0, 4);
-            // Message type (4)
-            buffer.Write(ToBE(BitConverter.GetBytes(messageType)), 0, 4);
-            // Split (4)
-            buffer.Write(ToBE(BitConverter.GetBytes(1)), 0, 4);
-            // Message
-            buffer.Write(messageArray, 0, messageArray.Length);
-
-            BaseStream.Write(buffer.GetBuffer(), 0, dataLength);
-            BaseStream.Flush();
-
-            if (BaseWebSocket != null)
+            if(message == null)
             {
-                byte[] b = new byte[dataLength];
-                BaseStream.Position = 0;
-                BaseStream.Read(b, 0, dataLength);
-                BaseWebSocket.SendAsync(new ArraySegment<byte>(b), WebSocketMessageType.Binary, true, CancellationToken.None).GetAwaiter().GetResult();
-                BaseStream.Position = 0;
+                return;
+            }
+            try
+            {
+                byte[] messageArray = Encoding.UTF8.GetBytes(message);
+                int dataLength = messageArray.Length + 16;
+
+                MemoryStream buffer = new MemoryStream(dataLength);
+                // Data length (4)
+                buffer.Write(ToBE(BitConverter.GetBytes(dataLength)), 0, 4);
+                // Header length and Data type (4)
+                buffer.Write(new byte[] { 0x00, 0x10, 0x00, 0x01 }, 0, 4);
+                // Message type (4)
+                buffer.Write(ToBE(BitConverter.GetBytes(messageType)), 0, 4);
+                // Split (4)
+                buffer.Write(ToBE(BitConverter.GetBytes(1)), 0, 4);
+                // Message
+                buffer.Write(messageArray, 0, messageArray.Length);
+
+                BaseStream.Write(buffer.GetBuffer(), 0, dataLength);
+                BaseStream.Flush();
+
+                if (BaseWebSocket != null)
+                {
+                    byte[] b = new byte[dataLength];
+                    BaseStream.Position = 0;
+                    BaseStream.Read(b, 0, dataLength);
+                    BaseWebSocket.SendAsync(new ArraySegment<byte>(b), WebSocketMessageType.Binary, true, CancellationToken.None).GetAwaiter().GetResult();
+                    BaseStream.Position = 0;
+                }
+            }
+            catch
+            {
+
             }
         }
 

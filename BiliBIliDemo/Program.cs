@@ -1,5 +1,7 @@
 ﻿using BiliLive;
 using BiliLive.Commands;
+using BiliLive.Commands.Enums;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +15,7 @@ namespace BiliBIliDemo
         static BiliLiveRoom listener;
         static void Main(string[] args)
         {
-            uint roomId = 0;// 189205;// 86002;// 9758780;// 5252;//22508204;
+            uint roomId = 22239259;// 189205;// 86002;// 9758780;// 5252;//22508204;
             string cookie = File.ReadAllText("D://cookie.txt");
             listener = new BiliLiveRoom(roomId, 826842, cookie);
             listener.Connected += Connected;
@@ -29,7 +31,7 @@ namespace BiliBIliDemo
             listener.OnDanmaku += OnDamaku02;
             //listener.OnGift += OnGift;
             //listener.OnGuardBuy += OnGuardBuy;
-            //listener.OnInteractWord += OnInteractWord;
+            listener.OnInteractWord += OnInteractWord;
             //listener.OnLive += OnLive;
             //listener.OnPreparing += OnPreparing;
             //listener.OnRoomBlock += OnRoomBlock;
@@ -44,6 +46,8 @@ namespace BiliBIliDemo
             listener.OnOnlineUser += OnOnlineUser;
 
             listener.Connect();
+
+            Console.ReadLine();
         }
 
 
@@ -51,8 +55,8 @@ namespace BiliBIliDemo
         private static void OnOnlineUser(OnlineUser cmd)
         {
             string roomName = "测试" + (i++);
-            var msg = listener.Send($"在线人数:{cmd.Count}");
-            Console.WriteLine(msg.Message);
+            //var msg = listener.Send($"在线人数:{cmd.Count}");
+            //Console.WriteLine(msg.Message);
             Thread.Sleep(1000);
             //msg = listener.Send($"修改直播名: {roomName}");
             //Console.WriteLine(msg.Message);
@@ -185,10 +189,10 @@ namespace BiliBIliDemo
             Append(msg);
         }
 
-        private static object GetIndentity(ICollection<InteractWord.Identities> identity)
+        private static object GetIndentity(ICollection<Identities> identity)
         {
             StringBuilder sb = new StringBuilder();
-            foreach(InteractWord.Identities item in identity)
+            foreach(Identities item in identity)
             {
                 sb.Append(item.ToString()).Append(",");
             }

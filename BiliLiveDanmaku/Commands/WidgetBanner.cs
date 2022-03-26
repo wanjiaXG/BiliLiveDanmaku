@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+//已检查无运行异常
 namespace BiliLive.Commands
 {
     public class WidgetBanner : Command
@@ -16,12 +17,19 @@ namespace BiliLive.Commands
         {
             try
             {
-                if (json["data"]["widget_list"] is JObject obj)
+                if (GetValue<JObject>("data","widget_list") is JObject obj)
                 {
                     List<Widget> list = new List<Widget>();
                     foreach (var prop in obj.Properties())
                     {
-                        list.Add(JsonConvert.DeserializeObject<Widget>(obj[prop.Name].ToString()));
+                        try
+                        {
+                            list.Add(JsonConvert.DeserializeObject<Widget>(obj[prop.Name].ToString()));
+                        }
+                        catch
+                        {
+
+                        }
                     }
                     WidgetList = list.ToArray();
                 }

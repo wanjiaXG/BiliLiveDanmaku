@@ -1,28 +1,32 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
+//已检查无运行异常
 namespace BiliLive.Commands
 {
     public class OnlineUser : Command
     {
-        public int Count { get; private set; }
+        public uint Count { get; private set; }
 
         public User[] Users;
 
         public OnlineUser(JToken token) : base(token)
         {
-            Count = GetValue<int>("num");
+            Count = GetValue<uint>("num");
 
             List<User> list = new List<User>();
             foreach(var item in GetValue<JArray>("list"))
             {
-                list.Add(JsonConvert.DeserializeObject<User>(item.ToString()));
+                try
+                {
+                    list.Add(JsonConvert.DeserializeObject<User>(item.ToString()));
+                }
+                catch
+                {
+
+                }
             }
             Users = list.ToArray();
         }
@@ -53,31 +57,33 @@ namespace BiliLive.Commands
                 do
                 {
                     string url = $"https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineRank?page={page}&pageSize={limit}&platform=pc_link&roomId={RoomId}&ruid={uid}";
-                    WebClient client = new WebClient();
-                    client.Headers["Cookie"] = cookie;
-                    json = JToken.Parse(client.DownloadString(url));
-
-                    var item = Util.GetJTokenValue<JArray>(json, "data", "item");
-
-                    if(item != null)
+                    using(WebClient client = new WebClient())
                     {
-                        if(item.Count <= 0) 
+                        client.Headers["Cookie"] = cookie;
+                        json = JToken.Parse(client.DownloadString(url));
+
+                        var item = Util.GetJTokenValue<JArray>(json, "data", "item");
+
+                        if (item != null)
                         {
-                            int num = Util.GetJTokenValue<int>(json, "data", "onlineNum");
-                            JObject result = new JObject();
-                            result.Add("num", num);
-                            result.Add("list", list);
-                            return new OnlineUser(result);
-                        }
-                        else
-                        {
-                            foreach (var user in item)
+                            if (item.Count <= 0)
                             {
-                                list.Add(user as JObject);
+                                int num = Util.GetJTokenValue<int>(json, "data", "onlineNum");
+                                JObject result = new JObject();
+                                result.Add("num", num);
+                                result.Add("list", list);
+                                return new OnlineUser(result);
+                            }
+                            else
+                            {
+                                foreach (var user in item)
+                                {
+                                    list.Add(user as JObject);
+                                }
                             }
                         }
-                    }
-                    page++;
+                        page++;
+                    } 
                 } while (true);
 
                 
