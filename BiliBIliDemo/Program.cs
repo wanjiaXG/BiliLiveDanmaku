@@ -15,7 +15,7 @@ namespace BiliBIliDemo
         static BiliLiveRoom listener;
         static void Main(string[] args)
         {
-            uint roomId = 22239259;// 189205;// 86002;// 9758780;// 5252;//22508204;
+            uint roomId = 189205;// 86002;// 9758780;// 5252;//22508204;
             string cookie = File.ReadAllText("D://cookie.txt");
             listener = new BiliLiveRoom(roomId, 826842, cookie);
             listener.Connected += Connected;
@@ -294,9 +294,6 @@ namespace BiliBIliDemo
             Console.WriteLine(msg);
             Append(msg);
             ReConnect();
-
-
-
         }
 
 
