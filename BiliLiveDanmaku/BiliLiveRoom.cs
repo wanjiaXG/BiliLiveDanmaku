@@ -106,7 +106,7 @@ namespace BiliLive
         private Thread EventListenerThread { get; set; }
         public bool IsRunning { get; private set; }
 
-        private uint RoomId { get; set; }
+        public uint RoomId { get; set; }
         public uint UID { set; get; }
 
         private string _cookie;

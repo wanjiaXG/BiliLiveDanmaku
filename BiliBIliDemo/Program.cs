@@ -13,7 +13,7 @@ namespace BiliBIliDemo
         static BiliLiveRoom listener;
         static void Main(string[] args)
         {
-            uint roomId = 189205;// 86002;// 9758780;// 5252;//22508204;
+            uint roomId = 0;// 189205;// 86002;// 9758780;// 5252;//22508204;
             string cookie = File.ReadAllText("D://cookie.txt");
             listener = new BiliLiveRoom(roomId, 826842, cookie);
             listener.Connected += Connected;
@@ -50,11 +50,12 @@ namespace BiliBIliDemo
         static int i = 10;
         private static void OnOnlineUser(OnlineUser cmd)
         {
-            Console.WriteLine("在线人数:" + cmd.Count + ", 成员:" + GetNames(cmd.Users));
-            var msg = listener.Send("在线人数:" + cmd.Count);
+            string roomName = "测试" + (i++);
+            var msg = listener.Send($"在线人数:{cmd.Count}");
             Console.WriteLine(msg.Message);
-            msg = listener.ChangeRoomName("TEST" + (i++));
-            Console.WriteLine(msg.Message);
+            Thread.Sleep(1000);
+            //msg = listener.Send($"修改直播名: {roomName}");
+            //Console.WriteLine(msg.Message);
         }
 
         private static string GetNames(OnlineUser.User[] users)
