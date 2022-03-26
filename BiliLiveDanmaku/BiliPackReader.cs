@@ -144,8 +144,9 @@ namespace BiliLive
                         throw new Exception();
                 }
             }
-            catch
+            catch(Exception e)
             {
+                Console.WriteLine(e.Message);
                 return null;
             }
 
