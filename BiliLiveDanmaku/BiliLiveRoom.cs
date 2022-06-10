@@ -495,6 +495,11 @@ namespace BiliLive
                     return new Result(false, $"弹幕消息: \" {msg}\"超出限制长度, 请控制在20个字以内");
                 }
 
+                if (string.IsNullOrWhiteSpace(Cookie))
+                {
+                    return new Result(false, "账号未登录, 无法发送弹幕消息到直播间!");
+                }
+
                 string url = "https://api.live.bilibili.com/msg/send";
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
@@ -582,6 +587,11 @@ namespace BiliLive
                 if (name.Length > 20)
                 {
                     return new Result(false, $"超出限制长度, 请将直播间名称控制在20个字以内");
+                }
+
+                if (string.IsNullOrWhiteSpace(Cookie))
+                {
+                    return new Result(false, "账号未登录, 无法发送弹幕消息到直播间!");
                 }
 
                 string url = "https://api.live.bilibili.com/room/v1/Room/update";
