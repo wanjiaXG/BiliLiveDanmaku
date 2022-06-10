@@ -45,12 +45,19 @@ namespace BiliBIliDemo
             //listener.OnWidgetBanner += OnWidgetBanner;
 
             listener.OnOnlineUser += OnOnlineUser;
-
+            //listener.OnStopLiveRoomList += OnStopLiveRoomList;
             listener.Connect();
 
             Console.ReadKey(true);
         }
 
+        private static void OnStopLiveRoomList(StopLiveRoomList cmd)
+        {
+            foreach(var item in cmd.RoomIdList)
+            {
+                Console.WriteLine(item);
+            }
+        }
 
         static int i = 10;
         private static void OnOnlineUser(OnlineUser cmd)

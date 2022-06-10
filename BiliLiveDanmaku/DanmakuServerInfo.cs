@@ -1,7 +1,7 @@
 ﻿//已检查无运行异常
 namespace BiliLive
 {
-    internal class DanmakuServer
+    internal class DanmakuServerInfo
     {
         public uint Uid;
         public long RoomId;

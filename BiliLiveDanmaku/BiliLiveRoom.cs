@@ -14,7 +14,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 #pragma warning disable 0067
 
@@ -93,8 +92,12 @@ namespace BiliLive
         [CommandType(CommandType.WIDGET_BANNER)]
         public event CommandHandler<WidgetBanner> OnWidgetBanner;
 
+        [CommandType(CommandType.STOP_LIVE_ROOM_LIST)]
+        public event CommandHandler<StopLiveRoomList> OnStopLiveRoomList;
+
         [CommandType(CommandType.HTTP_API_ONLINE_USER)]
         public event CommandHandler<OnlineUser> OnOnlineUser;
+
 
         public event CommandHandler<Command> OnUnknow;
 
@@ -172,7 +175,7 @@ namespace BiliLive
         {
             try
             {
-                DanmakuServer danmakuServer = GetDanmakuServer();
+                DanmakuServerInfo danmakuServer = GetDanmakuServer();
                 if (danmakuServer == null)
                     return false;
 
@@ -243,33 +246,26 @@ namespace BiliLive
 
         #region Connect to a DanmakuServer
 
-        private TcpClient GetTcpConnection(DanmakuServer danmakuServer)
+        private TcpClient GetTcpConnection(DanmakuServerInfo danmakuServer)
         {
             TcpClient tcpClient = new TcpClient();
             tcpClient.Connect(danmakuServer.Server, danmakuServer.Port);
             return tcpClient;
         }
 
-        private ClientWebSocket GetWsConnection(DanmakuServer danmakuServer)
+        private ClientWebSocket GetWsConnection(DanmakuServerInfo danmakuServer)
         {
             ClientWebSocket clientWebSocket = new ClientWebSocket();
             clientWebSocket.ConnectAsync(new Uri($"ws://{danmakuServer.Server}:{danmakuServer.WsPort}/sub"), CancellationToken.None).GetAwaiter().GetResult();
             return clientWebSocket;
         }
 
-        private ClientWebSocket GetWssConnection(DanmakuServer danmakuServer)
-        {
-            ClientWebSocket clientWebSocket = new ClientWebSocket();
-            clientWebSocket.ConnectAsync(new Uri($"wss://{danmakuServer.Server}:{danmakuServer.WssPort}/sub"), CancellationToken.None).GetAwaiter().GetResult();
-            return clientWebSocket;
-        }
-
-        private bool InitConnection(DanmakuServer danmakuServer)
+        private bool InitConnection(DanmakuServerInfo danmakuServer)
         {
             JToken initMsg = new JObject
             {
                 ["uid"] = 0,
-                ["roomid"] = danmakuServer.RoomId,
+                ["roomid"] = GetRealRoomId(danmakuServer.RoomId),
                 ["protover"] = 2,
                 ["platform"] = "web",
                 ["clientver"] = "1.12.0",
@@ -317,7 +313,8 @@ namespace BiliLive
 
         }
 
-        private DanmakuServer GetDanmakuServer()
+
+        private DanmakuServerInfo GetDanmakuServer()
         {
             try
             {
@@ -326,7 +323,7 @@ namespace BiliLive
                     string url = $"https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id={RoomId}";
                     JObject json = Util.GetJTokenValue<JObject>(JObject.Parse(client.DownloadString(url)), "data");
                     JObject host = Util.GetJTokenValue<JObject>(json, "host_server_list", 0);
-                    DanmakuServer danmakuServer = new DanmakuServer
+                    DanmakuServerInfo danmakuServer = new DanmakuServerInfo
                     {
                         Uid = UID,
                         RoomId = RoomId,
@@ -417,10 +414,7 @@ namespace BiliLive
                                     if(pack is PopularityPack popularityPack)
                                     {
                                         PopularityRecieved?.Invoke(popularityPack.Popularity);
-                                    }
-                                    if(GetOnlineUser() is OnlineUser user)
-                                    {
-                                        OnOnlineUser?.Invoke(user);
+                                        OnOnlineUser?.Invoke(GetOnlineUser());
                                     }
                                     break;
                                 case PackTypes.Command:
@@ -451,10 +445,6 @@ namespace BiliLive
                                     {
                                         handler.DynamicInvoke(cmd);
                                     }
-                                }
-                                else if(item.CommandType == CommandType.STOP_LIVE_ROOM_LIST)
-                                {
-                                    OnOnlineUser?.Invoke(GetOnlineUser());
                                 }
                                 else
                                 {

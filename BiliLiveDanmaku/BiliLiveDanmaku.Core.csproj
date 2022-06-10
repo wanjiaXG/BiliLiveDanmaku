@@ -106,7 +106,7 @@
     <Compile Include="Commands\Welcome.cs" />
     <Compile Include="Commands\WelcomeGuard.cs" />
     <Compile Include="Commands\WidgetBanner.cs" />
-    <Compile Include="DanmakuServer.cs" />
+    <Compile Include="DanmakuServerInfo.cs" />
     <Compile Include="Packs\CommandPack.cs" />
     <Compile Include="Packs\Enums\DataTypes.cs" />
     <Compile Include="Packs\Enums\PackTypes.cs" />
