@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 
 //已检查无运行异常
 namespace BiliLive.Commands
@@ -31,10 +32,23 @@ namespace BiliLive.Commands
             Users = list.ToArray();
         }
 
+        private OnlineUser(List<User> users) : base("")
+        {
+            if(users != null)
+            {
+                Users = users.ToArray();
+                Count = (uint)users.Count;
+            }
+            else
+            {
+                Users = new User[0];
+            }
+        }
+
         public class User
         {
             [JsonProperty("uid")]
-            public string UID;
+            public uint UID;
 
             [JsonProperty("name")]
             public string Username;
@@ -46,19 +60,20 @@ namespace BiliLive.Commands
 
         public static OnlineUser NewInstance(string cookie, uint RoomId, uint uid)
         {
-            //HTTP API + COOKIE
+            Dictionary<uint, User> dic = new Dictionary<uint, User>();
+
             JToken json = null;
             try
             {
                 int page = 1;
                 int limit = 50;
 
-                JArray list = new JArray();
                 do
                 {
                     string url = $"https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineRank?page={page}&pageSize={limit}&platform=pc_link&roomId={RoomId}&ruid={uid}";
-                    using(WebClient client = new WebClient())
+                    using (WebClient client = new WebClient())
                     {
+                        client.Encoding = Encoding.UTF8;
                         client.Headers["Cookie"] = cookie;
                         json = JToken.Parse(client.DownloadString(url));
 
@@ -68,35 +83,77 @@ namespace BiliLive.Commands
                         {
                             if (item.Count <= 0)
                             {
-                                int num = Util.GetJTokenValue<int>(json, "data", "onlineNum");
-                                JObject result = new JObject();
-                                result.Add("num", num);
-                                result.Add("list", list);
-                                return new OnlineUser(result);
+                                break;
                             }
                             else
                             {
-                                foreach (var user in item)
+                                foreach (var u in item)
                                 {
-                                    list.Add(user as JObject);
+                                    User user = u.ToObject<User>();
+                                    if (user != null && !dic.ContainsKey(user.UID))
+                                    {
+                                        dic.Add(user.UID, user);
+                                    }
                                 }
                             }
                         }
                         page++;
-                    } 
+                    }
                 } while (true);
 
-                
+
+                page = 1;
+                limit = 50;
+
+                do
+                {
+                    //
+                    string url = $"https://api.live.bilibili.com/xlive/general-interface/v1/rank/getAnchorOnlineGoldRank?page={page}&pageSize={limit}&roomId={RoomId}&ruid={uid}&platform=pc_link";
+                    using (WebClient client = new WebClient())
+                    {
+                        client.Encoding = Encoding.UTF8;
+                        client.Headers["Cookie"] = cookie;
+                        json = JToken.Parse(client.DownloadString(url));
+
+                        var item = Util.GetJTokenValue<JArray>(json, "data", "OnlineRankItem");
+
+                        if (item != null)
+                        {
+                            if (item.Count <= 0)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                foreach (var u in item)
+                                {
+                                    User user = u.ToObject<User>();
+                                    if (user != null && !dic.ContainsKey(user.UID))
+                                    {
+                                        dic.Add(user.UID, user);
+                                    }
+                                }
+                            }
+                        }
+                        page++;
+                    }
+                } while (true);
 
             }
             catch
             {
 
             }
-            
-            return new OnlineUser(json);
-        }
 
+
+            List<User> result = new List<User>();
+            foreach (var item in dic)
+            {
+                result.Add(item.Value);
+            }
+
+            return new OnlineUser(result);
+        }
 
     }
 }

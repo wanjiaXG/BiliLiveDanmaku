@@ -328,6 +328,7 @@ namespace BiliLive
                     JObject host = Util.GetJTokenValue<JObject>(json, "host_server_list", 0);
                     DanmakuServer danmakuServer = new DanmakuServer
                     {
+                        Uid = UID,
                         RoomId = RoomId,
                         Server = Util.GetJTokenValue<string>(host, "host"),
                         Port = Util.GetJTokenValue<int>(host, "port"),
@@ -450,16 +451,17 @@ namespace BiliLive
                                     {
                                         handler.DynamicInvoke(cmd);
                                     }
-                                    if (item.CommandType == CommandType.INTERACT_WORD)
-                                    {
-                                        OnOnlineUser?.Invoke(GetOnlineUser());
-                                    }
+                                }
+                                else if(item.CommandType == CommandType.STOP_LIVE_ROOM_LIST)
+                                {
+                                    OnOnlineUser?.Invoke(GetOnlineUser());
                                 }
                                 else
                                 {
                                     OnUnknow?.Invoke(item);
                                 }
                             }
+                            
                         }
                     }
                     catch(Exception e)

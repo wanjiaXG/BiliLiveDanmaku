@@ -47,6 +47,8 @@ namespace BiliLive.Commands.Enums
         [Command(typeof(WidgetBanner))]
         WIDGET_BANNER,
 
+        [Command(typeof(StopLiveRoomList))]
+        STOP_LIVE_ROOM_LIST,
 
         //ENTRY_EFFECT,
         //SYS_MSG,

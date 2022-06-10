@@ -100,6 +100,7 @@
     <Compile Include="Commands\Live.cs" />
     <Compile Include="Commands\Preparing.cs" />
     <Compile Include="Commands\RoomBlock.cs" />
+    <Compile Include="Commands\StopLiveRoomList.cs" />
     <Compile Include="Commands\SuperChat.cs" />
     <Compile Include="Commands\Attributes\CommandTypeAttribute.cs" />
     <Compile Include="Commands\Welcome.cs" />
