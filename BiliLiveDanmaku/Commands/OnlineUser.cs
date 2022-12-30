@@ -78,61 +78,16 @@ namespace BiliLive.Commands
                         json = JToken.Parse(client.DownloadString(url));
 
                         var item = Util.GetJTokenValue<JArray>(json, "data", "item");
+                        if (json == null) break;
+                        if (item == null) break;
+                        if (item.Count <= 0) break;
 
-                        if (item != null)
+                        foreach (var u in item)
                         {
-                            if (item.Count <= 0)
+                            User user = u.ToObject<User>();
+                            if (user != null && !dic.ContainsKey(user.UID))
                             {
-                                break;
-                            }
-                            else
-                            {
-                                foreach (var u in item)
-                                {
-                                    User user = u.ToObject<User>();
-                                    if (user != null && !dic.ContainsKey(user.UID))
-                                    {
-                                        dic.Add(user.UID, user);
-                                    }
-                                }
-                            }
-                        }
-                        page++;
-                    }
-                } while (true);
-
-
-                page = 1;
-                limit = 50;
-
-                do
-                {
-                    //
-                    string url = $"https://api.live.bilibili.com/xlive/general-interface/v1/rank/getAnchorOnlineGoldRank?page={page}&pageSize={limit}&roomId={RoomId}&ruid={uid}&platform=pc_link";
-                    using (WebClient client = new WebClient())
-                    {
-                        client.Encoding = Encoding.UTF8;
-                        client.Headers["Cookie"] = cookie;
-                        json = JToken.Parse(client.DownloadString(url));
-
-                        var item = Util.GetJTokenValue<JArray>(json, "data", "OnlineRankItem");
-
-                        if (item != null)
-                        {
-                            if (item.Count <= 0)
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                foreach (var u in item)
-                                {
-                                    User user = u.ToObject<User>();
-                                    if (user != null && !dic.ContainsKey(user.UID))
-                                    {
-                                        dic.Add(user.UID, user);
-                                    }
-                                }
+                                dic.Add(user.UID, user);
                             }
                         }
                         page++;

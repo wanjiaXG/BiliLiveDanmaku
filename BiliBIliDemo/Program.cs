@@ -16,8 +16,8 @@ namespace BiliBIliDemo
         static void Main(string[] args)
         {
             uint roomId = 189205;// 86002;// 9758780;// 5252;//22508204;
-            string cookie = File.ReadAllText("D://cookie.txt");
-            listener = new BiliLiveRoom(roomId, 826842, cookie, Protocols.Tcp);
+            string cookie = "";// File.ReadAllText("D://cookie.txt");
+            listener = new BiliLiveRoom(roomId, 826842, cookie);
             listener.Connected += Connected;
             listener.ConnectionFailed += ConnectionFailed;
             listener.Disconnected += Disconnected;
@@ -37,7 +37,7 @@ namespace BiliBIliDemo
             //listener.OnPreparing += OnPreparing;
             //listener.OnRoomBlock += OnRoomBlock;
             //listener.OnSuperChat += OnSuperChat;
-            //listener.OnUnknow += OnUnknow;
+            listener.OnUnknow += OnUnknow;
             //listener.OnWatchedChanged += OnWatchedChanged;
             //listener.OnWelcome += OnWelcome;
             //listener.OnWelcomeGuard += OnWelcomeGuard;
@@ -48,7 +48,10 @@ namespace BiliBIliDemo
             //listener.OnStopLiveRoomList += OnStopLiveRoomList;
             listener.Connect();
 
-            Console.ReadKey(true);
+            while (true)
+            {
+                Console.ReadLine();
+            }
         }
 
         private static void OnStopLiveRoomList(StopLiveRoomList cmd)

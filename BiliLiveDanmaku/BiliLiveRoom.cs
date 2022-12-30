@@ -374,6 +374,8 @@ namespace BiliLive
                     Thread.Sleep(30 * 1000);
                 }
             });
+            HeartbeatSenderThread.IsBackground = true;
+
             HeartbeatSenderThread.Start();
         }
         #endregion
@@ -399,11 +401,12 @@ namespace BiliLive
                     {
                         Pack[] packs = PackReader.ReadPacksAsync();
 
+                        
+
                         if(packs == null)
                         {
                             throw new Exception("Data is null.");
                         }
-
                         List<Command> items = new List<Command>();
 
                         foreach (Pack pack in packs)
@@ -418,10 +421,18 @@ namespace BiliLive
                                     }
                                     break;
                                 case PackTypes.Command:
-                                    if(pack is CommandPack commandPack &&
+                                    
+                                    
+
+                                    if (pack is CommandPack commandPack &&
                                         commandPack.Value is JToken value
-                                    ) { 
-                                        if(BiliLiveJsonParser.Parse(value) is Command cmd)
+                                    ) {
+                                        string cmdStr = GetOldCommand(Util.GetJTokenValue<string>(value, "cmd"));
+                                        if (!string.IsNullOrWhiteSpace(cmdStr))
+                                        {
+                                            value["cmd"] = cmdStr;
+                                        }
+                                        if (BiliLiveJsonParser.Parse(value) is Command cmd)
                                         {
                                             items.Add(cmd);
                                         }
@@ -461,7 +472,19 @@ namespace BiliLive
                     }
                 }
             });
+            EventListenerThread.IsBackground = true;
             EventListenerThread.Start();
+        }
+
+        private string GetOldCommand(string v)
+        {
+            Regex regex = new Regex("[1-9a-zA-Z_]{1,999}");
+            Match match = regex.Match(v);
+            if (match.Success)
+            {
+                return match.Value;
+            }
+            return string.Empty;
         }
 
         private OnlineUser GetOnlineUser()
