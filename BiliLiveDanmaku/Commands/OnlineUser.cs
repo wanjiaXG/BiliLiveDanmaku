@@ -60,6 +60,7 @@ namespace BiliLive.Commands
 
         public static OnlineUser NewInstance(string cookie, uint RoomId, uint uid)
         {
+            ///Rank V1
             Dictionary<uint, User> dic = new Dictionary<uint, User>();
 
             JToken json = null;
@@ -78,16 +79,60 @@ namespace BiliLive.Commands
                         json = JToken.Parse(client.DownloadString(url));
 
                         var item = Util.GetJTokenValue<JArray>(json, "data", "item");
-                        if (json == null) break;
-                        if (item == null) break;
-                        if (item.Count <= 0) break;
-
-                        foreach (var u in item)
+                        if (item != null)
                         {
-                            User user = u.ToObject<User>();
-                            if (user != null && !dic.ContainsKey(user.UID))
+                            if (item.Count <= 0)
                             {
-                                dic.Add(user.UID, user);
+                                break;
+                            }
+                            else
+                            {
+                                foreach (var u in item)
+                                {
+                                    User user = u.ToObject<User>();
+                                    if (user != null && !dic.ContainsKey(user.UID))
+                                    {
+                                        dic.Add(user.UID, user);
+                                    }
+                                }
+                            }
+                        }
+                        page++;
+                    }
+                } while (true);
+
+
+                page = 1;
+                limit = 50;
+
+                ///Rank V2
+                do
+                {
+                    string url = $"https://api.live.bilibili.com/xlive/general-interface/v1/rank/getAnchorOnlineGoldRank?page={page}&pageSize={limit}&roomId={RoomId}&ruid={uid}&platform=pc_link";
+                    using (WebClient client = new WebClient())
+                    {
+                        client.Encoding = Encoding.UTF8;
+                        client.Headers["Cookie"] = cookie;
+                        json = JToken.Parse(client.DownloadString(url));
+
+                        var item = Util.GetJTokenValue<JArray>(json, "data", "OnlineRankItem");
+
+                        if (item != null)
+                        {
+                            if (item.Count <= 0)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                foreach (var u in item)
+                                {
+                                    User user = u.ToObject<User>();
+                                    if (user != null && !dic.ContainsKey(user.UID))
+                                    {
+                                        dic.Add(user.UID, user);
+                                    }
+                                }
                             }
                         }
                         page++;
